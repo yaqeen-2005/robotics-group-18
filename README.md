@@ -1,1 +1,2 @@
-# robotics-group-18
+# Robotics Group 18
+An autonomous rubbish-collecting robot developed using ROS 2, Gazebo and Python. The robot uses LiDAR and odometry to localise itself within a pre-mapped indoor environment, while Nav2 enables autonomous navigation and obstacle avoidance. It distinguishes between large obstacles, humans and small rubbish objects, navigating safely around obstacles while using a robotic arm to pick up rubbish and deposit it into an onboard collection bin. The project focuses on integrating autonomous navigation, object detection, robotic manipulation and human-aware safety behaviours.
