@@ -1,5 +1,4 @@
-# Robotics Group 18
-Autonomous Pallet Transport Robot for a Simulated Warehouse 
+# Autonomous Pallet Transport Robot for a Simulated Warehouse 
 Group 18: Peifeng Xu, Sirui Meng, Thomas Morris, Yaqeen Bharoochi, Yi Gu. 
 Objective: Develop and evaluate an autonomous pallet transport robot that fulfils pickup and 
 delivery requests in a simulated warehouse while avoiding obstacles and reported hazards. 
