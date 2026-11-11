@@ -15,6 +15,17 @@ be as follows: receive a transport request, navigate to the pick-up location, wa
 confirmation, navigate to the delivery destination, wait for unloading confirmation, then navigate 
 back to the original waiting point.  We will use Gazebo for our simulation, ROS 2 for 
 communication, Python for task control, and Nav2 for navigation. 
+
+## System Requirements
+
+This project targets the following software versions:
+
+- Ubuntu 24.04.5 LTS (Noble Numbat)
+- ROS 2 Jazzy Jalisco
+- Gazebo Harmonic, using the `gz-harmonic` metapackage and Gazebo Sim (`gz-sim`) 8.15.0
+
+ROS 2 Jazzy and Gazebo Harmonic are the recommended stable ROS/Gazebo combination for Ubuntu 24.04 LTS.
+
 Minimum Working Version 
 Our minimum requirements are autonomous SLAM mapping of an initially unknown warehouse, 
 followed by localisation and navigation.  The robot will plan routes on its SLAM-generated map 
