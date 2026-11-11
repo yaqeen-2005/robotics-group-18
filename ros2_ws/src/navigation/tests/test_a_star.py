@@ -1,4 +1,5 @@
 import unittest
+from pathlib import Path
 
 from a_star import plan_path
 from map_io import load_text_map
@@ -6,7 +7,8 @@ from map_io import load_text_map
 
 class AStarTest(unittest.TestCase):
     def test_demo_map_reaches_goal_without_crossing_obstacles(self) -> None:
-        grid, start, goal = load_text_map("tests/maps/demo_map.txt")
+        map_path = Path(__file__).parent / "maps" / "demo_map.txt"
+        grid, start, goal = load_text_map(map_path)
 
         path = plan_path(grid, start, goal)
 
