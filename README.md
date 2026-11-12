@@ -44,7 +44,7 @@ route will be key due to the busy nature of a warehouse. The main success criter
 minimum is whether or not it can successfully collect and deliver at least one crate, navigate 
 without collisions and complete a delivery using an automatically calculated route. 
 ## Plan 
-Thomas: Develop robot, lifting mechanism and warehouse simulation.  
+- Thomas: Develop robot, lifting mechanism and warehouse simulation.  
 - Xu: Implement SLAM mapping and localisation using LiDAR and odometry. 
 - Yi: Develop A* pathfinding and autonomous navigation. 
 - Yaqeen: Implement crate pickup, transport and delivery mechanisms. 
