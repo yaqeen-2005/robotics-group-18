@@ -45,13 +45,13 @@ minimum is whether or not it can successfully collect and deliver at least one c
 without collisions and complete a delivery using an automatically calculated route. 
 Plan 
 Thomas: Develop robot, lifting mechanism and warehouse simulation.  
-Xu: Implement SLAM mapping and localisation using LiDAR and odometry. 
-Yi: Develop A* pathfinding and autonomous navigation. 
-Yaqeen: Implement crate pickup, transport and delivery mechanisms. 
-Sirui: Implement obstacle avoidance, integration, testing and evaluation.  
-● Main Risk: Integrating localisation, pathfinding and crate pickup within five weeks.  
-● Fallback: Use predefined pickup and delivery stations with a simplified crate attachment 
+- Xu: Implement SLAM mapping and localisation using LiDAR and odometry. 
+- Yi: Develop A* pathfinding and autonomous navigation. 
+- Yaqeen: Implement crate pickup, transport and delivery mechanisms. 
+- Sirui: Implement obstacle avoidance, integration, testing and evaluation.  
+ ● Main Risk: Integrating localisation, pathfinding and crate pickup within five weeks.  
+ ● Fallback: Use predefined pickup and delivery stations with a simplified crate attachment 
 mechanism, while retaining autonomous pathfinding and obstacle avoidance. 
-● Reference: Hart, Nilsson and Raphael (1968), A Formal Basis for the Heuristic 
+ ● Reference: Hart, Nilsson and Raphael (1968), A Formal Basis for the Heuristic 
 Determination of Minimum Cost Paths. IEEE Transactions on Systems Science and 
 Cybernetics, 4(2), 100–107.
