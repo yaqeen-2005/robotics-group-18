@@ -26,7 +26,7 @@ This project targets the following software versions:
 
 ROS 2 Jazzy and Gazebo Harmonic are the recommended stable ROS/Gazebo combination for Ubuntu 24.04 LTS.
 
-Minimum Working Version 
+## Minimum Working Version 
 Our minimum requirements are autonomous SLAM mapping of an initially unknown warehouse, 
 followed by localisation and navigation.  The robot will plan routes on its SLAM-generated map 
 and distinguish temporary from persistent obstacles to wait, avoid or replan.  For the main 
@@ -34,7 +34,7 @@ functionality of the robot, it must be able to lift the crate using a simplified
 mechanism, transport and release the crate. For our component interfaces, we will use LiDAR 
 and odometry for the localisation, estimated pose and map for the pathfinding algorithm and a 
 transport controller will manage crate pickup and delivery. 
-Evaluation 
+## Evaluation 
 To evaluate the success of our project, we must conduct repeated trials with varied crate 
 locations, destinations and obstacles, Measure successful crate collection and delivery rate. 
 We can evaluate localisation accuracy against Gazebo ground-truth position and the efficiency 
@@ -43,7 +43,7 @@ path algorithms. Evaluating the robot's ability to replan when unexpected obstac
 route will be key due to the busy nature of a warehouse. The main success criteria and bare 
 minimum is whether or not it can successfully collect and deliver at least one crate, navigate 
 without collisions and complete a delivery using an automatically calculated route. 
-Plan 
+## Plan 
 Thomas: Develop robot, lifting mechanism and warehouse simulation.  
 - Xu: Implement SLAM mapping and localisation using LiDAR and odometry. 
 - Yi: Develop A* pathfinding and autonomous navigation. 
