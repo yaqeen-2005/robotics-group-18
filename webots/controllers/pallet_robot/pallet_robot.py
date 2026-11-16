@@ -17,8 +17,12 @@ for motor in (left, right):
     motor.setVelocity(0)
 for sensor in encoders + [lift_sensor]:
     sensor.enable(step_ms)
-lift.setVelocity(0.04)
+lift.setVelocity(0.25)
 lift.setPosition(0)
+lift_stages = [robot.getDevice('lift_stage1_motor'), robot.getDevice('lift_stage2_motor')]
+for stage in lift_stages:
+    stage.setPosition(0)
+    stage.setVelocity(0.5)
 
 RADIUS = 0.15
 TRACK = 0.74
@@ -54,7 +58,7 @@ while robot.step(step_ms) != -1:
         command = (0.0, 0.0)
         last_drive_time = -1.0
     else:
-        v = 0.20 * ((ord('W') in keys) - (ord('S') in keys))
+        v = 0.60 * ((ord('W') in keys) - (ord('S') in keys))
         yaw = 0.50 * ((ord('A') in keys) - (ord('D') in keys))
         if v or yaw:
             command = (v, yaw)
@@ -62,16 +66,20 @@ while robot.step(step_ms) != -1:
         if now - last_drive_time > 0.12:
             command = (0.0, 0.0)
     position = lift_sensor.getValue()
+    if math.isfinite(position):
+        extension = max(0.0, min(0.60, position))
+        for index, stage in enumerate(lift_stages, 1):
+            stage.setPosition(extension * index / 3)
     lift_direction = (ord('U') in keys) - (ord('J') in keys)
     jog_allowed = (lift_direction != 0 and ord(' ') not in keys
                    and stopped_for >= 0.4 and command == (0.0, 0.0)
                    and math.isfinite(position))
     if jog_allowed:
-        lift_target = 0.22 if lift_direction > 0 else 0.0
+        lift_target = 0.60 if lift_direction > 0 else 0.0
         lift.setPosition(lift_target)
     elif lift_jogging and math.isfinite(position):
         # Position control holds the measured height against gravity on release.
-        lift_target = max(0.0, min(0.22, position))
+        lift_target = max(0.0, min(0.60, position))
         lift.setPosition(lift_target)
     if lift_direction and not jog_allowed and ord(' ') not in keys:
         if ord('U') in pressed or ord('J') in pressed:

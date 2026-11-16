@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "seed": 18,
+  "warehouse_size_m": [24, 18],
+  "robot_start": [-11, -6, 0.16],
+  "traffic_enabled": true,
+  "random_spills_enabled": false,
+  "spill_tick_s": 10,
+  "spill_change_probability": 0.15,
+  "temporary_blockage_s": 20,
+  "loads": [
+    {"id":"standard", "deck_size":[0.8,1.2,0.08], "cargo_height":0.32, "mass_kg":10, "handling":"normal", "color":[0.3,0.65,0.3], "station":[-9,-6]},
+    {"id":"wide", "deck_size":[1.2,1.8,0.08], "cargo_height":0.40, "mass_kg":18, "handling":"normal", "color":[0.9,0.55,0.12], "station":[-4.5,-6]},
+    {"id":"long", "deck_size":[1.8,1.2,0.08], "cargo_height":0.32, "mass_kg":20, "handling":"normal", "color":[0.5,0.3,0.7], "station":[0,-6]},
+    {"id":"heavy", "deck_size":[0.8,1.2,0.08], "cargo_height":0.32, "mass_kg":40, "handling":"heavy", "color":[0.25,0.35,0.6], "station":[4.5,-6]},
+    {"id":"fragile", "deck_size":[0.8,1.2,0.08], "cargo_height":0.70, "mass_kg":8, "handling":"fragile", "color":[0.85,0.3,0.4], "station":[9,-6]}
+  ],
+  "output_station": [-9,3],
+  "delivery_stations": [[-4,6.5],[2,6.5],[8,6.5]],
+  "spills": [
+    {"id":"spill_1", "center":[-6,1.4], "size":[1.6,1.4], "present":true, "reported":false},
+    {"id":"spill_2", "center":[6,-1.5], "size":[2.0,1.2], "present":true, "reported":true},
+    {"id":"spill_3", "center":[0,5], "size":[1.8,1.4], "present":false, "reported":false}
+  ],
+  "actors": [
+    {"id":"PERSON_1", "kind":"person", "start":[-8,-1.8], "end":[-4,-1.8], "speed":0.45, "dwell_s":2},
+    {"id":"PERSON_2", "kind":"person", "start":[-6,4.5], "end":[1,4.5], "speed":0.35, "dwell_s":3},
+    {"id":"FORKLIFT_1", "kind":"forklift", "start":[6,-3.7], "end":[6,3.7], "speed":0.5, "dwell_s":3}
+  ]
+}

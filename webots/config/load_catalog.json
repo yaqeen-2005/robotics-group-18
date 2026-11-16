@@ -1,0 +1,85 @@
+{
+  "assumptions": "Load centred on robot axle; 0.05 m margin. Recompute for attachment offsets.",
+  "profiles": {
+    "standard": {
+      "deck_size_m": [
+        0.8,
+        1.2,
+        0.08
+      ],
+      "cargo_height_m": 0.32,
+      "total_height_m": 0.4,
+      "total_mass_kg": 10,
+      "handling": "normal",
+      "centered_combined_rectangle_m": [
+        0.98,
+        1.2
+      ],
+      "centered_clearance_radius_m": 0.8246612162745726
+    },
+    "wide": {
+      "deck_size_m": [
+        1.2,
+        1.8,
+        0.08
+      ],
+      "cargo_height_m": 0.4,
+      "total_height_m": 0.48000000000000004,
+      "total_mass_kg": 18,
+      "handling": "normal",
+      "centered_combined_rectangle_m": [
+        1.2,
+        1.8
+      ],
+      "centered_clearance_radius_m": 1.131665382639197
+    },
+    "long": {
+      "deck_size_m": [
+        1.8,
+        1.2,
+        0.08
+      ],
+      "cargo_height_m": 0.32,
+      "total_height_m": 0.4,
+      "total_mass_kg": 20,
+      "handling": "normal",
+      "centered_combined_rectangle_m": [
+        1.8,
+        1.2
+      ],
+      "centered_clearance_radius_m": 1.131665382639197
+    },
+    "heavy": {
+      "deck_size_m": [
+        0.8,
+        1.2,
+        0.08
+      ],
+      "cargo_height_m": 0.32,
+      "total_height_m": 0.4,
+      "total_mass_kg": 40,
+      "handling": "heavy",
+      "centered_combined_rectangle_m": [
+        0.98,
+        1.2
+      ],
+      "centered_clearance_radius_m": 0.8246612162745726
+    },
+    "fragile": {
+      "deck_size_m": [
+        0.8,
+        1.2,
+        0.08
+      ],
+      "cargo_height_m": 0.7,
+      "total_height_m": 0.7799999999999999,
+      "total_mass_kg": 8,
+      "handling": "fragile",
+      "centered_combined_rectangle_m": [
+        0.98,
+        1.2
+      ],
+      "centered_clearance_radius_m": 0.8246612162745726
+    }
+  }
+}

@@ -1,0 +1,758 @@
+#VRML_SIM R2025a utf8
+EXTERNPROTO "../protos/PalletRobot.proto"
+IMPORTABLE EXTERNPROTO "../protos/TestLoad.proto"
+WorldInfo {
+  title "Group 18 - integration test warehouse"
+  basicTimeStep 16
+  coordinateSystem "ENU"
+  contactProperties [
+    ContactProperties { material1 "support" material2 "floor" coulombFriction [ 0.01 ] }
+    ContactProperties { material1 "tyre" material2 "floor" coulombFriction [ 1 ] }
+  ]
+}
+Viewpoint { orientation 0 1 0 1.57079632679 position 0 0 34 fieldOfView 0.95 description "Integration warehouse overview" }
+Background { skyColor [ 0.72 0.80 0.88 ] }
+DirectionalLight { direction -0.4 0.3 -1 intensity 1 castShadows FALSE }
+Solid {
+  translation 0 0 -0.1 name "floor"
+  contactMaterial "floor"
+  children [ Shape { appearance PBRAppearance { baseColor 0.73 0.75 0.76 roughness 0.8 metalness 0 } geometry Box { size 24.3 18.3 0.2 } } ]
+  boundingObject Box { size 24.3 18.3 0.2 }
+}
+Solid {
+  translation -12.075 0 1.2 name "west"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.55 0.6 0.65 roughness 0.8 metalness 0 } geometry Box { size 0.15 18.3 2.4 } } ]
+  boundingObject Box { size 0.15 18.3 2.4 }
+}
+Solid {
+  translation 12.075 0 1.2 name "east"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.55 0.6 0.65 roughness 0.8 metalness 0 } geometry Box { size 0.15 18.3 2.4 } } ]
+  boundingObject Box { size 0.15 18.3 2.4 }
+}
+Solid {
+  translation 0 -9.075 1.2 name "south"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.55 0.6 0.65 roughness 0.8 metalness 0 } geometry Box { size 24 0.15 2.4 } } ]
+  boundingObject Box { size 24 0.15 2.4 }
+}
+Solid {
+  translation 0 9.075 1.2 name "north"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.55 0.6 0.65 roughness 0.8 metalness 0 } geometry Box { size 24 0.15 2.4 } } ]
+  boundingObject Box { size 24 0.15 2.4 }
+}
+Solid {
+  translation -9.4 0 0.9 name "divider_west"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.55 0.6 0.65 roughness 0.8 metalness 0 } geometry Box { size 5.2 0.2 1.8 } } ]
+  boundingObject Box { size 5.2 0.2 1.8 }
+}
+Solid {
+  translation -0.4 0 0.9 name "divider_middle"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.55 0.6 0.65 roughness 0.8 metalness 0 } geometry Box { size 9.6 0.2 1.8 } } ]
+  boundingObject Box { size 9.6 0.2 1.8 }
+}
+Solid {
+  translation 9.8 0 0.9 name "divider_east"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.55 0.6 0.65 roughness 0.8 metalness 0 } geometry Box { size 4.4 0.2 1.8 } } ]
+  boundingObject Box { size 4.4 0.2 1.8 }
+}
+Solid {
+  translation -6 0 0.004 name "SHORTCUT 1.60 m"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.4 0.65 0.7 roughness 0.8 metalness 0 } geometry Box { size 1.6 1 0.008 } } ]
+  
+}
+Pose { translation -6 0.6 0.012 children [ Shape {
+ appearance PBRAppearance { baseColorMap ImageTexture { url [ "../textures/integration_labels/f86a366ba857.png" ] } roughness 1 metalness 0 }
+ geometry Plane { size 2.4000000000000004 0.30000000000000004 }
+} ] }
+Solid {
+  translation 6 0 0.004 name "WIDE ROUTE 3.20 m"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.4 0.65 0.7 roughness 0.8 metalness 0 } geometry Box { size 3.2 1 0.008 } } ]
+  
+}
+Pose { translation 6 0.6 0.012 children [ Shape {
+ appearance PBRAppearance { baseColorMap ImageTexture { url [ "../textures/integration_labels/f74a5cb14cc0.png" ] } roughness 1 metalness 0 }
+ geometry Plane { size 2.4000000000000004 0.30000000000000004 }
+} ] }
+Solid {
+  translation -9 -3.3 0.2 name "rack_0_plinth"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.2 0.25 0.3 roughness 0.8 metalness 0 } geometry Box { size 3 0.8 0.4 } } ]
+  boundingObject Box { size 3 0.8 0.4 }
+}
+Solid {
+  translation -10.43 -3.63 1.25 name "rack_0_post_-1.43_-0.33"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.25 0.35 0.45 roughness 0.8 metalness 0 } geometry Box { size 0.14 0.14 2.5 } } ]
+  boundingObject Box { size 0.14 0.14 2.5 }
+}
+Solid {
+  translation -10.43 -2.9699999999999998 1.25 name "rack_0_post_-1.43_0.33"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.25 0.35 0.45 roughness 0.8 metalness 0 } geometry Box { size 0.14 0.14 2.5 } } ]
+  boundingObject Box { size 0.14 0.14 2.5 }
+}
+Solid {
+  translation -7.57 -3.63 1.25 name "rack_0_post_1.43_-0.33"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.25 0.35 0.45 roughness 0.8 metalness 0 } geometry Box { size 0.14 0.14 2.5 } } ]
+  boundingObject Box { size 0.14 0.14 2.5 }
+}
+Solid {
+  translation -7.57 -2.9699999999999998 1.25 name "rack_0_post_1.43_0.33"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.25 0.35 0.45 roughness 0.8 metalness 0 } geometry Box { size 0.14 0.14 2.5 } } ]
+  boundingObject Box { size 0.14 0.14 2.5 }
+}
+Solid {
+  translation -9 -3.3 0.5 name "rack_0_shelf_0.5"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.85 0.35 0.12 roughness 0.8 metalness 0 } geometry Box { size 3 0.8 0.1 } } ]
+  boundingObject Box { size 3 0.8 0.1 }
+}
+Solid {
+  translation -9 -3.3 0.75 name "rack_0_goods_0.5"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.6 0.47 0.3 roughness 0.8 metalness 0 } geometry Box { size 2.7 0.6000000000000001 0.4 } } ]
+  boundingObject Box { size 2.7 0.6000000000000001 0.4 }
+}
+Solid {
+  translation -9 -3.3 1.35 name "rack_0_shelf_1.35"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.85 0.35 0.12 roughness 0.8 metalness 0 } geometry Box { size 3 0.8 0.1 } } ]
+  boundingObject Box { size 3 0.8 0.1 }
+}
+Solid {
+  translation -9 -3.3 1.6 name "rack_0_goods_1.35"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.6 0.47 0.3 roughness 0.8 metalness 0 } geometry Box { size 2.7 0.6000000000000001 0.4 } } ]
+  boundingObject Box { size 2.7 0.6000000000000001 0.4 }
+}
+Solid {
+  translation -9 -3.3 2.2 name "rack_0_shelf_2.2"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.85 0.35 0.12 roughness 0.8 metalness 0 } geometry Box { size 3 0.8 0.1 } } ]
+  boundingObject Box { size 3 0.8 0.1 }
+}
+Solid {
+  translation -9 -3.3 2.45 name "rack_0_goods_2.2"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.6 0.47 0.3 roughness 0.8 metalness 0 } geometry Box { size 2.7 0.6000000000000001 0.4 } } ]
+  boundingObject Box { size 2.7 0.6000000000000001 0.4 }
+}
+Solid {
+  translation -1 -3.3 0.2 name "rack_1_plinth"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.2 0.25 0.3 roughness 0.8 metalness 0 } geometry Box { size 3 0.8 0.4 } } ]
+  boundingObject Box { size 3 0.8 0.4 }
+}
+Solid {
+  translation -2.4299999999999997 -3.63 1.25 name "rack_1_post_-1.43_-0.33"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.25 0.35 0.45 roughness 0.8 metalness 0 } geometry Box { size 0.14 0.14 2.5 } } ]
+  boundingObject Box { size 0.14 0.14 2.5 }
+}
+Solid {
+  translation -2.4299999999999997 -2.9699999999999998 1.25 name "rack_1_post_-1.43_0.33"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.25 0.35 0.45 roughness 0.8 metalness 0 } geometry Box { size 0.14 0.14 2.5 } } ]
+  boundingObject Box { size 0.14 0.14 2.5 }
+}
+Solid {
+  translation 0.42999999999999994 -3.63 1.25 name "rack_1_post_1.43_-0.33"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.25 0.35 0.45 roughness 0.8 metalness 0 } geometry Box { size 0.14 0.14 2.5 } } ]
+  boundingObject Box { size 0.14 0.14 2.5 }
+}
+Solid {
+  translation 0.42999999999999994 -2.9699999999999998 1.25 name "rack_1_post_1.43_0.33"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.25 0.35 0.45 roughness 0.8 metalness 0 } geometry Box { size 0.14 0.14 2.5 } } ]
+  boundingObject Box { size 0.14 0.14 2.5 }
+}
+Solid {
+  translation -1 -3.3 0.5 name "rack_1_shelf_0.5"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.85 0.35 0.12 roughness 0.8 metalness 0 } geometry Box { size 3 0.8 0.1 } } ]
+  boundingObject Box { size 3 0.8 0.1 }
+}
+Solid {
+  translation -1 -3.3 0.75 name "rack_1_goods_0.5"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.6 0.47 0.3 roughness 0.8 metalness 0 } geometry Box { size 2.7 0.6000000000000001 0.4 } } ]
+  boundingObject Box { size 2.7 0.6000000000000001 0.4 }
+}
+Solid {
+  translation -1 -3.3 1.35 name "rack_1_shelf_1.35"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.85 0.35 0.12 roughness 0.8 metalness 0 } geometry Box { size 3 0.8 0.1 } } ]
+  boundingObject Box { size 3 0.8 0.1 }
+}
+Solid {
+  translation -1 -3.3 1.6 name "rack_1_goods_1.35"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.6 0.47 0.3 roughness 0.8 metalness 0 } geometry Box { size 2.7 0.6000000000000001 0.4 } } ]
+  boundingObject Box { size 2.7 0.6000000000000001 0.4 }
+}
+Solid {
+  translation -1 -3.3 2.2 name "rack_1_shelf_2.2"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.85 0.35 0.12 roughness 0.8 metalness 0 } geometry Box { size 3 0.8 0.1 } } ]
+  boundingObject Box { size 3 0.8 0.1 }
+}
+Solid {
+  translation -1 -3.3 2.45 name "rack_1_goods_2.2"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.6 0.47 0.3 roughness 0.8 metalness 0 } geometry Box { size 2.7 0.6000000000000001 0.4 } } ]
+  boundingObject Box { size 2.7 0.6000000000000001 0.4 }
+}
+Solid {
+  translation -2 3.3 0.2 name "rack_2_plinth"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.2 0.25 0.3 roughness 0.8 metalness 0 } geometry Box { size 3 0.8 0.4 } } ]
+  boundingObject Box { size 3 0.8 0.4 }
+}
+Solid {
+  translation -3.4299999999999997 2.9699999999999998 1.25 name "rack_2_post_-1.43_-0.33"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.25 0.35 0.45 roughness 0.8 metalness 0 } geometry Box { size 0.14 0.14 2.5 } } ]
+  boundingObject Box { size 0.14 0.14 2.5 }
+}
+Solid {
+  translation -3.4299999999999997 3.63 1.25 name "rack_2_post_-1.43_0.33"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.25 0.35 0.45 roughness 0.8 metalness 0 } geometry Box { size 0.14 0.14 2.5 } } ]
+  boundingObject Box { size 0.14 0.14 2.5 }
+}
+Solid {
+  translation -0.5700000000000001 2.9699999999999998 1.25 name "rack_2_post_1.43_-0.33"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.25 0.35 0.45 roughness 0.8 metalness 0 } geometry Box { size 0.14 0.14 2.5 } } ]
+  boundingObject Box { size 0.14 0.14 2.5 }
+}
+Solid {
+  translation -0.5700000000000001 3.63 1.25 name "rack_2_post_1.43_0.33"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.25 0.35 0.45 roughness 0.8 metalness 0 } geometry Box { size 0.14 0.14 2.5 } } ]
+  boundingObject Box { size 0.14 0.14 2.5 }
+}
+Solid {
+  translation -2 3.3 0.5 name "rack_2_shelf_0.5"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.85 0.35 0.12 roughness 0.8 metalness 0 } geometry Box { size 3 0.8 0.1 } } ]
+  boundingObject Box { size 3 0.8 0.1 }
+}
+Solid {
+  translation -2 3.3 0.75 name "rack_2_goods_0.5"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.6 0.47 0.3 roughness 0.8 metalness 0 } geometry Box { size 2.7 0.6000000000000001 0.4 } } ]
+  boundingObject Box { size 2.7 0.6000000000000001 0.4 }
+}
+Solid {
+  translation -2 3.3 1.35 name "rack_2_shelf_1.35"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.85 0.35 0.12 roughness 0.8 metalness 0 } geometry Box { size 3 0.8 0.1 } } ]
+  boundingObject Box { size 3 0.8 0.1 }
+}
+Solid {
+  translation -2 3.3 1.6 name "rack_2_goods_1.35"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.6 0.47 0.3 roughness 0.8 metalness 0 } geometry Box { size 2.7 0.6000000000000001 0.4 } } ]
+  boundingObject Box { size 2.7 0.6000000000000001 0.4 }
+}
+Solid {
+  translation -2 3.3 2.2 name "rack_2_shelf_2.2"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.85 0.35 0.12 roughness 0.8 metalness 0 } geometry Box { size 3 0.8 0.1 } } ]
+  boundingObject Box { size 3 0.8 0.1 }
+}
+Solid {
+  translation -2 3.3 2.45 name "rack_2_goods_2.2"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.6 0.47 0.3 roughness 0.8 metalness 0 } geometry Box { size 2.7 0.6000000000000001 0.4 } } ]
+  boundingObject Box { size 2.7 0.6000000000000001 0.4 }
+}
+Solid {
+  translation 3.5 3.3 0.2 name "rack_3_plinth"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.2 0.25 0.3 roughness 0.8 metalness 0 } geometry Box { size 2 0.8 0.4 } } ]
+  boundingObject Box { size 2 0.8 0.4 }
+}
+Solid {
+  translation 2.5700000000000003 2.9699999999999998 1.25 name "rack_3_post_-0.9299999999999999_-0.33"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.25 0.35 0.45 roughness 0.8 metalness 0 } geometry Box { size 0.14 0.14 2.5 } } ]
+  boundingObject Box { size 0.14 0.14 2.5 }
+}
+Solid {
+  translation 2.5700000000000003 3.63 1.25 name "rack_3_post_-0.9299999999999999_0.33"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.25 0.35 0.45 roughness 0.8 metalness 0 } geometry Box { size 0.14 0.14 2.5 } } ]
+  boundingObject Box { size 0.14 0.14 2.5 }
+}
+Solid {
+  translation 4.43 2.9699999999999998 1.25 name "rack_3_post_0.9299999999999999_-0.33"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.25 0.35 0.45 roughness 0.8 metalness 0 } geometry Box { size 0.14 0.14 2.5 } } ]
+  boundingObject Box { size 0.14 0.14 2.5 }
+}
+Solid {
+  translation 4.43 3.63 1.25 name "rack_3_post_0.9299999999999999_0.33"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.25 0.35 0.45 roughness 0.8 metalness 0 } geometry Box { size 0.14 0.14 2.5 } } ]
+  boundingObject Box { size 0.14 0.14 2.5 }
+}
+Solid {
+  translation 3.5 3.3 0.5 name "rack_3_shelf_0.5"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.85 0.35 0.12 roughness 0.8 metalness 0 } geometry Box { size 2 0.8 0.1 } } ]
+  boundingObject Box { size 2 0.8 0.1 }
+}
+Solid {
+  translation 3.5 3.3 0.75 name "rack_3_goods_0.5"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.6 0.47 0.3 roughness 0.8 metalness 0 } geometry Box { size 1.7 0.6000000000000001 0.4 } } ]
+  boundingObject Box { size 1.7 0.6000000000000001 0.4 }
+}
+Solid {
+  translation 3.5 3.3 1.35 name "rack_3_shelf_1.35"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.85 0.35 0.12 roughness 0.8 metalness 0 } geometry Box { size 2 0.8 0.1 } } ]
+  boundingObject Box { size 2 0.8 0.1 }
+}
+Solid {
+  translation 3.5 3.3 1.6 name "rack_3_goods_1.35"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.6 0.47 0.3 roughness 0.8 metalness 0 } geometry Box { size 1.7 0.6000000000000001 0.4 } } ]
+  boundingObject Box { size 1.7 0.6000000000000001 0.4 }
+}
+Solid {
+  translation 3.5 3.3 2.2 name "rack_3_shelf_2.2"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.85 0.35 0.12 roughness 0.8 metalness 0 } geometry Box { size 2 0.8 0.1 } } ]
+  boundingObject Box { size 2 0.8 0.1 }
+}
+Solid {
+  translation 3.5 3.3 2.45 name "rack_3_goods_2.2"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.6 0.47 0.3 roughness 0.8 metalness 0 } geometry Box { size 1.7 0.6000000000000001 0.4 } } ]
+  boundingObject Box { size 1.7 0.6000000000000001 0.4 }
+}
+Solid {
+  translation 10.8 -2.8 0.2 name "rack_4_plinth"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.2 0.25 0.3 roughness 0.8 metalness 0 } geometry Box { size 1 3 0.4 } } ]
+  boundingObject Box { size 1 3 0.4 }
+}
+Solid {
+  translation 10.370000000000001 -4.2299999999999995 1.25 name "rack_4_post_-0.43_-1.43"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.25 0.35 0.45 roughness 0.8 metalness 0 } geometry Box { size 0.14 0.14 2.5 } } ]
+  boundingObject Box { size 0.14 0.14 2.5 }
+}
+Solid {
+  translation 10.370000000000001 -1.3699999999999999 1.25 name "rack_4_post_-0.43_1.43"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.25 0.35 0.45 roughness 0.8 metalness 0 } geometry Box { size 0.14 0.14 2.5 } } ]
+  boundingObject Box { size 0.14 0.14 2.5 }
+}
+Solid {
+  translation 11.23 -4.2299999999999995 1.25 name "rack_4_post_0.43_-1.43"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.25 0.35 0.45 roughness 0.8 metalness 0 } geometry Box { size 0.14 0.14 2.5 } } ]
+  boundingObject Box { size 0.14 0.14 2.5 }
+}
+Solid {
+  translation 11.23 -1.3699999999999999 1.25 name "rack_4_post_0.43_1.43"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.25 0.35 0.45 roughness 0.8 metalness 0 } geometry Box { size 0.14 0.14 2.5 } } ]
+  boundingObject Box { size 0.14 0.14 2.5 }
+}
+Solid {
+  translation 10.8 -2.8 0.5 name "rack_4_shelf_0.5"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.85 0.35 0.12 roughness 0.8 metalness 0 } geometry Box { size 1 3 0.1 } } ]
+  boundingObject Box { size 1 3 0.1 }
+}
+Solid {
+  translation 10.8 -2.8 0.75 name "rack_4_goods_0.5"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.6 0.47 0.3 roughness 0.8 metalness 0 } geometry Box { size 0.7 2.8 0.4 } } ]
+  boundingObject Box { size 0.7 2.8 0.4 }
+}
+Solid {
+  translation 10.8 -2.8 1.35 name "rack_4_shelf_1.35"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.85 0.35 0.12 roughness 0.8 metalness 0 } geometry Box { size 1 3 0.1 } } ]
+  boundingObject Box { size 1 3 0.1 }
+}
+Solid {
+  translation 10.8 -2.8 1.6 name "rack_4_goods_1.35"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.6 0.47 0.3 roughness 0.8 metalness 0 } geometry Box { size 0.7 2.8 0.4 } } ]
+  boundingObject Box { size 0.7 2.8 0.4 }
+}
+Solid {
+  translation 10.8 -2.8 2.2 name "rack_4_shelf_2.2"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.85 0.35 0.12 roughness 0.8 metalness 0 } geometry Box { size 1 3 0.1 } } ]
+  boundingObject Box { size 1 3 0.1 }
+}
+Solid {
+  translation 10.8 -2.8 2.45 name "rack_4_goods_2.2"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.6 0.47 0.3 roughness 0.8 metalness 0 } geometry Box { size 0.7 2.8 0.4 } } ]
+  boundingObject Box { size 0.7 2.8 0.4 }
+}
+Solid {
+  translation -10 6.5 0.4 name "crate"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.55 0.35 0.2 roughness 0.8 metalness 0 } geometry Box { size 0.8 0.8 0.8 } } ]
+  boundingObject Box { size 0.8 0.8 0.8 }
+}
+Solid {
+  translation 10.5 4 0.9 name "column"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.4 0.45 0.5 roughness 0.8 metalness 0 } geometry Box { size 0.4 0.4 1.8 } } ]
+  boundingObject Box { size 0.4 0.4 1.8 }
+}
+Solid {
+  translation 0.3 -8 0.5 name "dead_end_left"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.5 0.55 0.6 roughness 0.8 metalness 0 } geometry Box { size 0.15 1.8 1 } } ]
+  boundingObject Box { size 0.15 1.8 1 }
+}
+Solid {
+  translation 2.7 -8 0.5 name "dead_end_right"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.5 0.55 0.6 roughness 0.8 metalness 0 } geometry Box { size 0.15 1.8 1 } } ]
+  boundingObject Box { size 0.15 1.8 1 }
+}
+Solid {
+  translation 1.5 -8.8 0.5 name "dead_end_back"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.5 0.55 0.6 roughness 0.8 metalness 0 } geometry Box { size 2.4 0.15 1 } } ]
+  boundingObject Box { size 2.4 0.15 1 }
+}
+Pose { translation 1.5 -8 0.012 children [ Shape {
+ appearance PBRAppearance { baseColorMap ImageTexture { url [ "../textures/integration_labels/10ebc79e7d9d.png" ] } roughness 1 metalness 0 }
+ geometry Plane { size 2.88 0.36 }
+} ] }
+Solid {
+  translation -10.8 -8 0.004 name "waiting_pad"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.25 0.55 0.65 roughness 0.8 metalness 0 } geometry Box { size 1.4 1.2 0.008 } } ]
+  
+}
+Pose { translation -10.8 -8 0.012 children [ Shape {
+ appearance PBRAppearance { baseColorMap ImageTexture { url [ "../textures/integration_labels/4f618185f2ea.png" ] } roughness 1 metalness 0 }
+ geometry Plane { size 2.88 0.36 }
+} ] }
+Solid {
+  translation -9 -6 0.002 name "standard_pad"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.3 0.65 0.3 roughness 0.8 metalness 0 } geometry Box { size 2.2 2.1 0.004 } } ]
+  
+}
+Solid {
+  translation -9 -6.54 0.24 name "standard-1"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.3 0.65 0.3 roughness 0.8 metalness 0 } geometry Box { size 2.1 0.12 0.48 } } ]
+  boundingObject Box { size 2.1 0.12 0.48 }
+}
+Solid {
+  translation -9 -5.46 0.24 name "standard1"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.3 0.65 0.3 roughness 0.8 metalness 0 } geometry Box { size 2.1 0.12 0.48 } } ]
+  boundingObject Box { size 2.1 0.12 0.48 }
+}
+Pose { translation -9 -7.35 0.012 children [ Shape {
+ appearance PBRAppearance { baseColorMap ImageTexture { url [ "../textures/integration_labels/335fd665f279.png" ] } roughness 1 metalness 0 }
+ geometry Plane { size 2.88 0.36 }
+} ] }
+DEF LOAD_STANDARD TestLoad {
+ translation -9 -6 0.52 name "load_standard"
+ deckSize 0.8 1.2 0.08 cargoSize 0.7200000000000001 1.1199999999999999 0.32
+ cargoOffset 0 0 0.2 mass 10 color 0.3 0.65 0.3
+}
+Solid {
+  translation -4.5 -6 0.002 name "wide_pad"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.9 0.55 0.12 roughness 0.8 metalness 0 } geometry Box { size 2.2 2.1 0.004 } } ]
+  
+}
+Solid {
+  translation -4.5 -6.54 0.24 name "wide-1"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.9 0.55 0.12 roughness 0.8 metalness 0 } geometry Box { size 2.1 0.12 0.48 } } ]
+  boundingObject Box { size 2.1 0.12 0.48 }
+}
+Solid {
+  translation -4.5 -5.46 0.24 name "wide1"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.9 0.55 0.12 roughness 0.8 metalness 0 } geometry Box { size 2.1 0.12 0.48 } } ]
+  boundingObject Box { size 2.1 0.12 0.48 }
+}
+Pose { translation -4.5 -7.35 0.012 children [ Shape {
+ appearance PBRAppearance { baseColorMap ImageTexture { url [ "../textures/integration_labels/f7f49fc699ef.png" ] } roughness 1 metalness 0 }
+ geometry Plane { size 2.88 0.36 }
+} ] }
+DEF LOAD_WIDE TestLoad {
+ translation -4.5 -6 0.52 name "load_wide"
+ deckSize 1.2 1.8 0.08 cargoSize 1.1199999999999999 1.72 0.4
+ cargoOffset 0 0 0.24000000000000002 mass 18 color 0.9 0.55 0.12
+}
+Solid {
+  translation 0 -6 0.002 name "long_pad"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.5 0.3 0.7 roughness 0.8 metalness 0 } geometry Box { size 2.2 2.1 0.004 } } ]
+  
+}
+Solid {
+  translation 0 -6.54 0.24 name "long-1"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.5 0.3 0.7 roughness 0.8 metalness 0 } geometry Box { size 2.1 0.12 0.48 } } ]
+  boundingObject Box { size 2.1 0.12 0.48 }
+}
+Solid {
+  translation 0 -5.46 0.24 name "long1"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.5 0.3 0.7 roughness 0.8 metalness 0 } geometry Box { size 2.1 0.12 0.48 } } ]
+  boundingObject Box { size 2.1 0.12 0.48 }
+}
+Pose { translation 0 -7.35 0.012 children [ Shape {
+ appearance PBRAppearance { baseColorMap ImageTexture { url [ "../textures/integration_labels/a8f3862b9630.png" ] } roughness 1 metalness 0 }
+ geometry Plane { size 2.88 0.36 }
+} ] }
+DEF LOAD_LONG TestLoad {
+ translation 0 -6 0.52 name "load_long"
+ deckSize 1.8 1.2 0.08 cargoSize 1.72 1.1199999999999999 0.32
+ cargoOffset 0 0 0.2 mass 20 color 0.5 0.3 0.7
+}
+Solid {
+  translation 4.5 -6 0.002 name "heavy_pad"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.25 0.35 0.6 roughness 0.8 metalness 0 } geometry Box { size 2.2 2.1 0.004 } } ]
+  
+}
+Solid {
+  translation 4.5 -6.54 0.24 name "heavy-1"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.25 0.35 0.6 roughness 0.8 metalness 0 } geometry Box { size 2.1 0.12 0.48 } } ]
+  boundingObject Box { size 2.1 0.12 0.48 }
+}
+Solid {
+  translation 4.5 -5.46 0.24 name "heavy1"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.25 0.35 0.6 roughness 0.8 metalness 0 } geometry Box { size 2.1 0.12 0.48 } } ]
+  boundingObject Box { size 2.1 0.12 0.48 }
+}
+Pose { translation 4.5 -7.35 0.012 children [ Shape {
+ appearance PBRAppearance { baseColorMap ImageTexture { url [ "../textures/integration_labels/e8a86a3fe825.png" ] } roughness 1 metalness 0 }
+ geometry Plane { size 2.88 0.36 }
+} ] }
+DEF LOAD_HEAVY TestLoad {
+ translation 4.5 -6 0.52 name "load_heavy"
+ deckSize 0.8 1.2 0.08 cargoSize 0.7200000000000001 1.1199999999999999 0.32
+ cargoOffset 0 0 0.2 mass 40 color 0.25 0.35 0.6
+}
+Solid {
+  translation 9 -6 0.002 name "fragile_pad"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.85 0.3 0.4 roughness 0.8 metalness 0 } geometry Box { size 2.2 2.1 0.004 } } ]
+  
+}
+Solid {
+  translation 9 -6.54 0.24 name "fragile-1"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.85 0.3 0.4 roughness 0.8 metalness 0 } geometry Box { size 2.1 0.12 0.48 } } ]
+  boundingObject Box { size 2.1 0.12 0.48 }
+}
+Solid {
+  translation 9 -5.46 0.24 name "fragile1"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.85 0.3 0.4 roughness 0.8 metalness 0 } geometry Box { size 2.1 0.12 0.48 } } ]
+  boundingObject Box { size 2.1 0.12 0.48 }
+}
+Pose { translation 9 -7.35 0.012 children [ Shape {
+ appearance PBRAppearance { baseColorMap ImageTexture { url [ "../textures/integration_labels/2475b587511c.png" ] } roughness 1 metalness 0 }
+ geometry Plane { size 2.88 0.36 }
+} ] }
+DEF LOAD_FRAGILE TestLoad {
+ translation 9 -6 0.52 name "load_fragile"
+ deckSize 0.8 1.2 0.08 cargoSize 0.7200000000000001 1.1199999999999999 0.7
+ cargoOffset 0 0 0.38999999999999996 mass 8 color 0.85 0.3 0.4
+}
+Solid {
+  translation -4 6.5 0.002 name "delivery_1_pad"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.2 0.45 0.8 roughness 0.8 metalness 0 } geometry Box { size 2.2 2.1 0.004 } } ]
+  
+}
+Solid {
+  translation -4 5.96 0.24 name "delivery_1-1"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.2 0.45 0.8 roughness 0.8 metalness 0 } geometry Box { size 2.1 0.12 0.48 } } ]
+  boundingObject Box { size 2.1 0.12 0.48 }
+}
+Solid {
+  translation -4 7.04 0.24 name "delivery_11"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.2 0.45 0.8 roughness 0.8 metalness 0 } geometry Box { size 2.1 0.12 0.48 } } ]
+  boundingObject Box { size 2.1 0.12 0.48 }
+}
+Pose { translation -4 5.15 0.012 children [ Shape {
+ appearance PBRAppearance { baseColorMap ImageTexture { url [ "../textures/integration_labels/55461f6e740b.png" ] } roughness 1 metalness 0 }
+ geometry Plane { size 2.88 0.36 }
+} ] }
+Solid {
+  translation 2 6.5 0.002 name "delivery_2_pad"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.2 0.45 0.8 roughness 0.8 metalness 0 } geometry Box { size 2.2 2.1 0.004 } } ]
+  
+}
+Solid {
+  translation 2 5.96 0.24 name "delivery_2-1"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.2 0.45 0.8 roughness 0.8 metalness 0 } geometry Box { size 2.1 0.12 0.48 } } ]
+  boundingObject Box { size 2.1 0.12 0.48 }
+}
+Solid {
+  translation 2 7.04 0.24 name "delivery_21"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.2 0.45 0.8 roughness 0.8 metalness 0 } geometry Box { size 2.1 0.12 0.48 } } ]
+  boundingObject Box { size 2.1 0.12 0.48 }
+}
+Pose { translation 2 5.15 0.012 children [ Shape {
+ appearance PBRAppearance { baseColorMap ImageTexture { url [ "../textures/integration_labels/855f53260368.png" ] } roughness 1 metalness 0 }
+ geometry Plane { size 2.88 0.36 }
+} ] }
+Solid {
+  translation 8 6.5 0.002 name "delivery_3_pad"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.2 0.45 0.8 roughness 0.8 metalness 0 } geometry Box { size 2.2 2.1 0.004 } } ]
+  
+}
+Solid {
+  translation 8 5.96 0.24 name "delivery_3-1"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.2 0.45 0.8 roughness 0.8 metalness 0 } geometry Box { size 2.1 0.12 0.48 } } ]
+  boundingObject Box { size 2.1 0.12 0.48 }
+}
+Solid {
+  translation 8 7.04 0.24 name "delivery_31"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.2 0.45 0.8 roughness 0.8 metalness 0 } geometry Box { size 2.1 0.12 0.48 } } ]
+  boundingObject Box { size 2.1 0.12 0.48 }
+}
+Pose { translation 8 5.15 0.012 children [ Shape {
+ appearance PBRAppearance { baseColorMap ImageTexture { url [ "../textures/integration_labels/f1cea5ee1921.png" ] } roughness 1 metalness 0 }
+ geometry Plane { size 2.88 0.36 }
+} ] }
+Solid {
+  translation -9 3 0.002 name "storage_output_pad"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.2 0.7 0.6 roughness 0.8 metalness 0 } geometry Box { size 2.2 2.1 0.004 } } ]
+  
+}
+Solid {
+  translation -9 2.46 0.24 name "storage_output-1"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.2 0.7 0.6 roughness 0.8 metalness 0 } geometry Box { size 2.1 0.12 0.48 } } ]
+  boundingObject Box { size 2.1 0.12 0.48 }
+}
+Solid {
+  translation -9 3.54 0.24 name "storage_output1"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.2 0.7 0.6 roughness 0.8 metalness 0 } geometry Box { size 2.1 0.12 0.48 } } ]
+  boundingObject Box { size 2.1 0.12 0.48 }
+}
+Pose { translation -9 1.65 0.012 children [ Shape {
+ appearance PBRAppearance { baseColorMap ImageTexture { url [ "../textures/integration_labels/0a5ec56dd8c9.png" ] } roughness 1 metalness 0 }
+ geometry Plane { size 2.88 0.36 }
+} ] }
+Solid {
+  translation -11.5 3 1.1 name "storage_facade"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.25 0.3 0.35 roughness 0.8 metalness 0 } geometry Box { size 0.4 3.3 2.2 } } ]
+  boundingObject Box { size 0.4 3.3 2.2 }
+}
+Solid {
+  translation -10.7 3 0.38 name "output_conveyor"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.45 0.48 0.5 roughness 0.8 metalness 0 } geometry Box { size 1.0 1.3 0.16 } } ]
+  boundingObject Box { size 1.0 1.3 0.16 }
+}
+Pose { translation -10 5.1 0.012 children [ Shape {
+ appearance PBRAppearance { baseColorMap ImageTexture { url [ "../textures/integration_labels/cc1508643d1e.png" ] } roughness 1 metalness 0 }
+ geometry Plane { size 2.4000000000000004 0.30000000000000004 }
+} ] }
+DEF SPILL_1 Pose { translation -6 1.4 0.007 children [ Shape {
+ appearance DEF SPILL_COLOR_1 PBRAppearance { baseColor 0.8 0.55 0.05 roughness 0.25 metalness 0 }
+ geometry Box { size 1.6 1.4 0.008 }
+} ] }
+Pose { translation -6 2.3499999999999996 0.012 children [ Shape {
+ appearance PBRAppearance { baseColorMap ImageTexture { url [ "../textures/integration_labels/0142ffdfa51c.png" ] } roughness 1 metalness 0 }
+ geometry Plane { size 2.16 0.27 }
+} ] }
+DEF SPILL_2 Pose { translation 6 -1.5 0.007 children [ Shape {
+ appearance DEF SPILL_COLOR_2 PBRAppearance { baseColor 0.85 0.15 0.08 roughness 0.25 metalness 0 }
+ geometry Box { size 2.0 1.2 0.008 }
+} ] }
+Pose { translation 6 -0.65 0.012 children [ Shape {
+ appearance PBRAppearance { baseColorMap ImageTexture { url [ "../textures/integration_labels/43b7efc0e056.png" ] } roughness 1 metalness 0 }
+ geometry Plane { size 2.16 0.27 }
+} ] }
+DEF SPILL_3 Pose { translation 0 5 -1 children [ Shape {
+ appearance DEF SPILL_COLOR_3 PBRAppearance { baseColor 0.8 0.55 0.05 roughness 0.25 metalness 0 }
+ geometry Box { size 1.8 1.4 0.008 }
+} ] }
+Pose { translation 0 5.95 0.012 children [ Shape {
+ appearance PBRAppearance { baseColorMap ImageTexture { url [ "../textures/integration_labels/e653386ff1bc.png" ] } roughness 1 metalness 0 }
+ geometry Plane { size 2.16 0.27 }
+} ] }
+DEF PERSON_1 Solid {
+ translation -8 -1.8 0 rotation 0 0 1 0.0 name "PERSON_1"
+ children [ Pose { translation 0 -0.14 0.38 children [ Shape { appearance PBRAppearance { baseColor 0.12 0.18 0.25 roughness 0.8 metalness 0 } geometry Box { size 0.24 0.18 0.76 } } ] } Pose { translation 0 0.14 0.38 children [ Shape { appearance PBRAppearance { baseColor 0.12 0.18 0.25 roughness 0.8 metalness 0 } geometry Box { size 0.24 0.18 0.76 } } ] } Pose { translation 0 0 1.08 children [ Shape { appearance PBRAppearance { baseColor 0.95 0.65 0.04 roughness 0.8 metalness 0 } geometry Box { size 0.32 0.5 0.65 } } ] } Pose { translation 0 0 1.58 children [ Shape { appearance PBRAppearance { baseColor 0.75 0.55 0.4 roughness 1 metalness 0 } geometry Sphere { radius 0.17 } } ] } ]
+ boundingObject Group { children [ Pose { translation 0 -0.14 0.38 children [ Box { size 0.24 0.18 0.76 } ] } Pose { translation 0 0.14 0.38 children [ Box { size 0.24 0.18 0.76 } ] } Pose { translation 0 0 1.08 children [ Box { size 0.32 0.5 0.65 } ] } Pose { translation 0 0 1.58 children [ Sphere { radius 0.17 } ] } ] }
+}
+DEF PERSON_2 Solid {
+ translation -6 4.5 0 rotation 0 0 1 0.0 name "PERSON_2"
+ children [ Pose { translation 0 -0.14 0.38 children [ Shape { appearance PBRAppearance { baseColor 0.12 0.18 0.25 roughness 0.8 metalness 0 } geometry Box { size 0.24 0.18 0.76 } } ] } Pose { translation 0 0.14 0.38 children [ Shape { appearance PBRAppearance { baseColor 0.12 0.18 0.25 roughness 0.8 metalness 0 } geometry Box { size 0.24 0.18 0.76 } } ] } Pose { translation 0 0 1.08 children [ Shape { appearance PBRAppearance { baseColor 0.95 0.65 0.04 roughness 0.8 metalness 0 } geometry Box { size 0.32 0.5 0.65 } } ] } Pose { translation 0 0 1.58 children [ Shape { appearance PBRAppearance { baseColor 0.75 0.55 0.4 roughness 1 metalness 0 } geometry Sphere { radius 0.17 } } ] } ]
+ boundingObject Group { children [ Pose { translation 0 -0.14 0.38 children [ Box { size 0.24 0.18 0.76 } ] } Pose { translation 0 0.14 0.38 children [ Box { size 0.24 0.18 0.76 } ] } Pose { translation 0 0 1.08 children [ Box { size 0.32 0.5 0.65 } ] } Pose { translation 0 0 1.58 children [ Sphere { radius 0.17 } ] } ] }
+}
+DEF FORKLIFT_1 Solid {
+ translation 6 -3.7 0 rotation 0 0 1 1.5707963267948966 name "FORKLIFT_1"
+ children [ Pose { translation -0.25 0 0.55 children [ Shape { appearance PBRAppearance { baseColor 0.95 0.65 0.03 roughness 0.8 metalness 0 } geometry Box { size 1.5 1.05 0.9 } } ] } Pose { translation 0.55 0 1.1 children [ Shape { appearance PBRAppearance { baseColor 0.18 0.22 0.25 roughness 0.8 metalness 0 } geometry Box { size 0.15 1 2.1 } } ] } Pose { translation 1 -0.34 0.12 children [ Shape { appearance PBRAppearance { baseColor 0.2 0.22 0.25 roughness 0.8 metalness 0 } geometry Box { size 1 0.12 0.12 } } ] } Pose { translation -0.4 -0.52 0.24 children [ Shape { appearance PBRAppearance { baseColor 0.06 0.06 0.06 roughness 0.8 metalness 0 } geometry Box { size 1.1 0.16 0.48 } } ] } Pose { translation 1 0.34 0.12 children [ Shape { appearance PBRAppearance { baseColor 0.2 0.22 0.25 roughness 0.8 metalness 0 } geometry Box { size 1 0.12 0.12 } } ] } Pose { translation -0.4 0.52 0.24 children [ Shape { appearance PBRAppearance { baseColor 0.06 0.06 0.06 roughness 0.8 metalness 0 } geometry Box { size 1.1 0.16 0.48 } } ] } Pose { translation -0.25 0 1.9 children [ Shape { appearance PBRAppearance { baseColor 0.3 0.32 0.35 roughness 0.8 metalness 0 } geometry Box { size 1.3 1.1 0.1 } } ] } ]
+ boundingObject Group { children [ Pose { translation -0.25 0 0.55 children [ Box { size 1.5 1.05 0.9 } ] } Pose { translation 0.55 0 1.1 children [ Box { size 0.15 1 2.1 } ] } Pose { translation 1 -0.34 0.12 children [ Box { size 1 0.12 0.12 } ] } Pose { translation -0.4 -0.52 0.24 children [ Box { size 1.1 0.16 0.48 } ] } Pose { translation 1 0.34 0.12 children [ Box { size 1 0.12 0.12 } ] } Pose { translation -0.4 0.52 0.24 children [ Box { size 1.1 0.16 0.48 } ] } Pose { translation -0.25 0 1.9 children [ Box { size 1.3 1.1 0.1 } ] } ] }
+}
+DEF NARROW_GATE Solid {
+  translation -6 0 4 name "NARROW_GATE"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.9 0.3 0.08 roughness 0.8 metalness 0 } geometry Box { size 1.6 0.25 1.1 } } ]
+  boundingObject Box { size 1.6 0.25 1.1 }
+}
+DEF WIDE_GATE Solid {
+  translation 6 0 4 name "WIDE_GATE"
+  
+  children [ Shape { appearance PBRAppearance { baseColor 0.9 0.3 0.08 roughness 0.8 metalness 0 } geometry Box { size 3.2 0.25 1.1 } } ]
+  boundingObject Box { size 3.2 0.25 1.1 }
+}
+DEF TRANSPORT_ROBOT PalletRobot {
+ translation -11 -6 0.16
+ extensionSlot [
+   Receiver { name "warehouse_events" channel 18 }
+   Emitter { name "warehouse_commands" channel 19 }
+ ]
+}
+DEF WAREHOUSE_MANAGER Robot {
+ supervisor TRUE name "warehouse_manager" controller "warehouse_manager"
+ children [ Emitter { name "events" channel 18 } Receiver { name "commands" channel 19 } ]
+}

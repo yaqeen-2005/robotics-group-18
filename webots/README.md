@@ -1,5 +1,10 @@
 # Webots warehouse and pallet robot
 
+The additional **integration_test.wbt** world is described in
+[INTEGRATION_TEST.md](INTEGRATION_TEST.md), including spill/traffic controls,
+load profiles, team interfaces and validation. The original warehouse below
+remains the small component test world.
+
 ## Open on Windows
 
 1. Start your installed Webots from its existing shortcut. The supplied
@@ -41,10 +46,10 @@ the Windows folder in the editor/Codex before requesting further edits there.
 
 | Key | Action |
 | --- | --- |
-| Hold W / S | Forward / reverse at 0.20 m/s command |
+| Hold W / S | Forward / reverse at 0.60 m/s command |
 | Hold A / D | Left / right turn at 0.50 rad/s command |
 | Space | Stop wheels and hold current lift height |
-| Hold U | Raise platform; release to hold height (maximum 0.22 m) |
+| Hold U | Raise platform; release to hold height (maximum 0.60 m) |
 | Hold J | Lower platform; release to hold height (minimum zero) |
 | R | Print measured lift extension and target in Webots console |
 
@@ -70,11 +75,12 @@ The wide pallet is at (3, -3); the empty delivery stand is at (-3, 3).
   wheel width 0.10 m and mass 2 kg each. Two spherical low-friction supports
   approximate caster support; they are not detailed swivelling casters.
 - Empty conservative rectangular envelope: 0.98 × 0.84 m, centred on the axle.
-- Platform: 0.70 × 0.60 × 0.04 m, 5 kg. Nominal top height is 0.40–0.62 m
-  above the floor after settling. Lift speed 0.04 m/s, max force 1500 N.
-  A visual telescopic sleeve and moving piston connect chassis and platform.
+- Platform: 0.70 × 0.60 × 0.04 m, 5 kg. Nominal top height is 0.40–1.00 m
+  above the floor after settling. Lift speed 0.25 m/s, max force 1500 N.
+  A central telescopic sleeve, two intermediate stages and a piston connect
+  the chassis and platform. Each intermediate stage adds 0.05 kg.
   These remain inside the robot envelope; the slider supplies the physical
-  constraint, with no separate actuator collision geometry or mass.
+  constraint; the intermediate stages have cylindrical collision shapes.
 - Normal pallet: 0.80 × 1.20 × 0.08 m, 10 kg. Wide: 1.20 × 1.40 × 0.08 m,
   15 kg. Full boxes provide visual and collision geometry, including overhang.
 - Stand tops: 0.48 m. Each has two rails leaving 0.96 m clear between them.
@@ -124,7 +130,7 @@ Record your Webots version, pass/fail, console errors and observations:
    right. Verify releasing keys and Space stop motion. Check straight tracking,
    turning traction and behaviour when the window loses focus.
 4. **Lift empty:** stop, wait, then hold U. Release halfway and press R to check
-   that height holds. Hold U to reach 0.22 m; hold J to return to zero. Check
+   that height holds. Hold U to reach 0.60 m; hold J to return to zero. Check
    release in both directions and Space during travel. Try driving during travel (should be blocked)
    and requesting lift while driving (should be rejected).
 5. **Collision:** approach a wall slowly. The chassis should collide rather than
@@ -179,3 +185,13 @@ a visual telescopic actuator. A mocked controller check passed key release in
 both directions, drive lockout while lifting, rejection with drive commands,
 turn speed and Space hold. Real keyboard timing and loaded stability with these
 changes still need checking in Webots.
+
+The lift now has 0.60 m travel at 0.25 m/s (previously 0.22 m at
+0.04 m/s). Historical validation notes above describe the earlier settings.
+The original central actuator appearance is restored with intermediate stages
+to keep the piston connected over the extended travel. Forward/reverse manual
+speed is now 0.60 m/s (three times the original speed).
+
+Replacement controllers should drive `lift_stage1_motor` and `lift_stage2_motor`
+to one third and two thirds of the measured `lift_sensor` extension each step.
+The main `lift_motor` and `lift_sensor` retain their existing interfaces.

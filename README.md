@@ -8,6 +8,12 @@ ROS 2 is not needed to open the warehouse or manually drive and lift.
 Open [`webots/worlds/warehouse.wbt`](webots/worlds/warehouse.wbt) in Webots.
 Read the [setup and manual acceptance checklist](webots/README.md) first.
 
+For team feature integration, open
+[`webots/worlds/integration_test.wbt`](webots/worlds/integration_test.wbt).
+This larger test warehouse adds varied cargo, moving people/forklift, spill
+reporting, controlled blockages and a pallet output bay. See the
+[integration run guide and interfaces](webots/INTEGRATION_TEST.md).
+
 ## Current implementation
 
 - Compact warehouse with a narrow shortcut, wide alternative, shelves and stands.

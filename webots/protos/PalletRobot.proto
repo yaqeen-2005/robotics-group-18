@@ -4,6 +4,7 @@ PROTO PalletRobot [
   field SFVec3f translation 0 -3 0.16
   field SFRotation rotation 0 0 1 0
   field SFString controller "pallet_robot"
+  field MFNode extensionSlot []
 ] {
 Robot {
   translation IS translation
@@ -11,6 +12,7 @@ Robot {
   name "group18_pallet_robot"
   controller IS controller
   children [
+    Group { children IS extensionSlot }
     Pose { translation 0 0 0.10 children [ Shape {
       appearance PBRAppearance { baseColor 0.9 0.65 0.05 roughness 0.7 metalness 0 }
       geometry Box { size 0.90 0.62 0.18 }
@@ -75,18 +77,42 @@ Robot {
       boundingObject Sphere { radius 0.05 }
       physics Physics { density -1 mass 0.2 }
     }
-    # Visual telescopic actuator sleeve, recessed into the chassis.
-    # The SliderJoint supplies the physical constraint; these nested visuals
-    # deliberately have no overlapping internal collision boxes.
+    # Central telescopic actuator: sleeve, two sliding stages and platform rod.
     Pose { translation 0 0 0.09 children [ Shape {
       appearance PBRAppearance { baseColor 0.16 0.18 0.20 roughness 0.5 metalness 0.6 }
       geometry Cylinder { radius 0.075 height 0.24 }
     } ] }
     SliderJoint {
+      jointParameters JointParameters { axis 0 0 1 minStop -0.005 maxStop 0.20500000000000002 }
+      device [ LinearMotor { name "lift_stage1_motor" minPosition 0 maxPosition 0.2 maxVelocity 0.5 maxForce 20 controlPID 30 0 0 } ]
+      endPoint Solid {
+        translation 0 0 0.09 name "lift_stage1"
+        children [ Shape {
+          appearance PBRAppearance { baseColor 0.55 0.58 0.62 roughness 0.25 metalness 0.85 }
+          geometry Cylinder { radius 0.065 height 0.24 }
+        } ]
+        boundingObject Cylinder { radius 0.065 height 0.24 }
+        physics Physics { density -1 mass 0.05 }
+      }
+    }
+    SliderJoint {
+      jointParameters JointParameters { axis 0 0 1 minStop -0.005 maxStop 0.405 }
+      device [ LinearMotor { name "lift_stage2_motor" minPosition 0 maxPosition 0.4 maxVelocity 0.5 maxForce 20 controlPID 30 0 0 } ]
+      endPoint Solid {
+        translation 0 0 0.09 name "lift_stage2"
+        children [ Shape {
+          appearance PBRAppearance { baseColor 0.55 0.58 0.62 roughness 0.25 metalness 0.85 }
+          geometry Cylinder { radius 0.055 height 0.24 }
+        } ]
+        boundingObject Cylinder { radius 0.055 height 0.24 }
+        physics Physics { density -1 mass 0.05 }
+      }
+    }
+    SliderJoint {
       # Keep mechanical stops outside commanded travel to avoid stop/motor chatter.
-      jointParameters JointParameters { axis 0 0 1 minStop -0.005 maxStop 0.225 dampingConstant 20 }
+      jointParameters JointParameters { axis 0 0 1 minStop -0.005 maxStop 0.605 dampingConstant 20 }
       device [
-        LinearMotor { name "lift_motor" minPosition 0 maxPosition 0.22 maxVelocity 0.04 maxForce 1500 }
+        LinearMotor { name "lift_motor" minPosition 0 maxPosition 0.60 maxVelocity 0.25 maxForce 1500 }
         PositionSensor { name "lift_sensor" }
       ]
       endPoint Solid {
