@@ -1,5 +1,8 @@
 # Ridgeback warehouse milestone
 
+> Legacy Gazebo setup retained for reference. The active simulation is now
+> [Webots](../../../webots/README.md). Results below apply only to the old Gazebo model.
+
 Run these commands in Ubuntu/WSL Bash, from the repository root. Dependencies:
 ROS 2 Jazzy, Gazebo Harmonic, and `ros-jazzy-clearpath-simulator`.
 These are source configuration and scripts, not a colcon package yet; no build

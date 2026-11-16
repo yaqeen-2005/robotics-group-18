@@ -1,65 +1,46 @@
-# Autonomous Pallet Transport Robot for a Simulated Warehouse 
-> The latest scope is **Cargo Aware Autonomous Pallet Transport Robot**.
-> The original proposal below is retained as history; current implementation,
-> ownership and remaining robot tasks are described in the
-> [robot design and team guide](ros2_ws/src/robot_description/README.md).
+# Cargo Aware Autonomous Pallet Transport Robot
 
-Group 18: Peifeng Xu, Sirui Meng, Thomas Morris, Yaqeen Bharoochi, Yi Gu. 
-Objective: Develop and evaluate an autonomous pallet transport robot that fulfils pickup and 
-delivery requests in a simulated warehouse while avoiding obstacles and reported hazards. 
-Scenario and Approach 
-Our project will involve adapting an existing robot model, such as Clearpath’s Ridgeback, to 
-autonomously transport pallets between pickup and delivery points in a simulated warehouse.  
-The robot will be on wheels with a flat platform acting as the pallet carrying area.  It will first 
-explore the unknown warehouse using SLAM to build a map for subsequent delivery tasks.  
-Reported spills may be manually reported by workers and act as a forbidden area.  Manual 
-control of the robot will be possible, temporarily disabling autonomous navigation and allowing it 
-to be navigated out of situations it cannot handle.  Loading and unloading will be represented by 
-the simulated attachment and removal of pallets while the robot is stationary.  The workflow will 
-be as follows: receive a transport request, navigate to the pick-up location, wait for loading 
-confirmation, navigate to the delivery destination, wait for unloading confirmation, then navigate 
-back to the original waiting point.  We will use Gazebo for our simulation, ROS 2 for 
-communication, Python for task control, and Nav2 for navigation. 
+Group 18: Peifeng Xu, Sirui Meng, Thomas Morris, Yaqeen Bharoochi, Yi Gu.
 
-## System Requirements
+The active simulation is now **Webots R2025a with a native Python controller**.
+ROS 2 is not needed to open the warehouse or manually drive and lift.
 
-This project targets the following software versions:
+Open [`webots/worlds/warehouse.wbt`](webots/worlds/warehouse.wbt) in Webots.
+Read the [setup and manual acceptance checklist](webots/README.md) first.
 
-- Ubuntu 24.04.5 LTS (Noble Numbat)
-- ROS 2 Jazzy Jalisco
-- Gazebo Harmonic, using the `gz-harmonic` metapackage and Gazebo Sim (`gz-sim`) 8.15.0
+## Current implementation
 
-ROS 2 Jazzy and Gazebo Harmonic are the recommended stable ROS/Gazebo combination for Ubuntu 24.04 LTS.
+- Compact warehouse with a narrow shortcut, wide alternative, shelves and stands.
+- Custom differential-drive robot with physical wheels, low-friction supports,
+  a motorised platform, collision geometry and mass.
+- Reusable normal/wide pallet models and a front LiDAR device.
+- Keyboard driving and lift control, with a stationary check before lift commands.
 
-## Minimum Working Version 
-For the stock Ridgeback and fixed-platform warehouse setup, see the
-[warehouse simulation instructions](ros2_ws/src/warehouse_simulation/README.md).
+**Validation is partial.** Subsequent Webots checks reproduced and corrected
+lift startup oscillation, then checked settling and three empty lift cycles.
+Driving and loaded handling still require the manual acceptance checklist;
+see `webots/README.md` for the test scope.
 
-Our minimum requirements are autonomous SLAM mapping of an initially unknown warehouse, 
-followed by localisation and navigation.  The robot will plan routes on its SLAM-generated map 
-and distinguish temporary from persistent obstacles to wait, avoid or replan.  For the main 
-functionality of the robot, it must be able to lift the crate using a simplified attachment 
-mechanism, transport and release the crate. For our component interfaces, we will use LiDAR 
-and odometry for the localisation, estimated pose and map for the pathfinding algorithm and a 
-transport controller will manage crate pickup and delivery. 
-## Evaluation 
-To evaluate the success of our project, we must conduct repeated trials with varied crate 
-locations, destinations and obstacles, Measure successful crate collection and delivery rate. 
-We can evaluate localisation accuracy against Gazebo ground-truth position and the efficiency 
-of paths by measuring route length, delivery time and collision count through either A* or fixed 
-path algorithms. Evaluating the robot's ability to replan when unexpected obstacles block its 
-route will be key due to the busy nature of a warehouse. The main success criteria and bare 
-minimum is whether or not it can successfully collect and deliver at least one crate, navigate 
-without collisions and complete a delivery using an automatically calculated route. 
-## Plan 
-- Thomas: Develop robot, lifting mechanism and warehouse simulation.  
-- Xu: Implement SLAM mapping and localisation using LiDAR and odometry. 
-- Yi: Develop A* pathfinding and autonomous navigation. 
-- Yaqeen: Implement crate pickup, transport and delivery mechanisms. 
-- Sirui: Implement obstacle avoidance, integration, testing and evaluation.  
- ● Main Risk: Integrating localisation, pathfinding and crate pickup within five weeks.  
- ● Fallback: Use predefined pickup and delivery stations with a simplified crate attachment 
-mechanism, while retaining autonomous pathfinding and obstacle avoidance. 
- ● Reference: Hart, Nilsson and Raphael (1968), A Formal Basis for the Heuristic 
-Determination of Minimum Cost Paths. IEEE Transactions on Systems Science and 
-Cybernetics, 4(2), 100–107.
+The robot can attempt to raise a pallet through physical contact; it does not
+have an attachment mechanism yet. Mapping, localisation, autonomous navigation,
+confirmed cargo-state coordination and comparative trials are not integrated.
+The robot controller has no privileged world-pose access or saved occupancy map.
+
+## Repository layout and ownership
+
+- `webots/`: active world, robot, pallets and manual bring-up controller.
+- `ros2_ws/src/navigation/`: existing planner, map attributes and event-store work,
+  retained in place and unchanged. It is not connected to the Webots controller.
+- Other existing ROS directories: retained for their owners and historical reference.
+- `ros2_ws/src/robot_description/` and `warehouse_simulation/`: legacy Gazebo prototype.
+- `docs/archive/README-gazebo.md`: previous project README, preserved verbatim.
+
+Thomas owns physical robot/lift/load geometry. Xu owns warehouse/exploration/tasks;
+Sirui owns integration and cargo-aware planning. Yi and Yaqeen retain their own
+components; their implementation was not migrated or modified in this change.
+
+The project objective remains mapping an initially unknown warehouse, completing
+pallet deliveries and adapting clearance/motion to cargo. Team planning should
+now account for native Webots interfaces; ROS/Nav2 integration is no longer an
+assumption of this prototype. Reused and AI-assisted work must be recorded in
+contribution/report declarations.

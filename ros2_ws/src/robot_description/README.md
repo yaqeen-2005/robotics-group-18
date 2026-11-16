@@ -1,5 +1,8 @@
 # Robot design and team handover
 
+> Legacy Ridgeback/Gazebo design. The active custom differential-drive robot is
+> documented in the [Webots guide](../../../webots/README.md).
+
 The latest cargo-aware proposal supersedes the older responsibilities in the
 original project README. Thomas owns robot/lift/physical attachment; Xu owns
 the warehouse and task sequence; Yi owns SLAM/localisation; Sirui owns combined

@@ -1,0 +1,128 @@
+#VRML_SIM R2025a utf8
+# Local coordinates: x forward, y left, z up. Origin at drive axle.
+PROTO PalletRobot [
+  field SFVec3f translation 0 -3 0.16
+  field SFRotation rotation 0 0 1 0
+  field SFString controller "pallet_robot"
+] {
+Robot {
+  translation IS translation
+  rotation IS rotation
+  name "group18_pallet_robot"
+  controller IS controller
+  children [
+    Pose { translation 0 0 0.10 children [ Shape {
+      appearance PBRAppearance { baseColor 0.9 0.65 0.05 roughness 0.7 metalness 0 }
+      geometry Box { size 0.90 0.62 0.18 }
+    } ] }
+    HingeJoint {
+      jointParameters HingeJointParameters { axis 0 1 0 anchor 0 0.37 0 }
+      device [
+        RotationalMotor { name "left_wheel_motor" maxVelocity 8 maxTorque 35 }
+        PositionSensor { name "left_wheel_sensor" }
+      ]
+      endPoint Solid {
+        translation 0 0.37 0
+        rotation 1 0 0 -1.57079632679
+        name "left_wheel"
+        contactMaterial "tyre"
+        children [ Shape {
+          appearance PBRAppearance { baseColor 0.06 0.06 0.06 roughness 1 metalness 0 }
+          geometry Cylinder { radius 0.15 height 0.10 subdivision 24 }
+        } ]
+        boundingObject Cylinder { radius 0.15 height 0.10 subdivision 24 }
+        physics Physics { density -1 mass 2 }
+      }
+    }
+    HingeJoint {
+      jointParameters HingeJointParameters { axis 0 1 0 anchor 0 -0.37 0 }
+      device [
+        RotationalMotor { name "right_wheel_motor" maxVelocity 8 maxTorque 35 }
+        PositionSensor { name "right_wheel_sensor" }
+      ]
+      endPoint Solid {
+        translation 0 -0.37 0
+        rotation 1 0 0 -1.57079632679
+        name "right_wheel"
+        contactMaterial "tyre"
+        children [ Shape {
+          appearance PBRAppearance { baseColor 0.06 0.06 0.06 roughness 1 metalness 0 }
+          geometry Cylinder { radius 0.15 height 0.10 subdivision 24 }
+        } ]
+        boundingObject Cylinder { radius 0.15 height 0.10 subdivision 24 }
+        physics Physics { density -1 mass 2 }
+      }
+    }
+    Solid {
+      translation 0.36 0 -0.10
+      name "front_support"
+      contactMaterial "support"
+      children [ Shape {
+        appearance PBRAppearance { baseColor 0.2 0.2 0.2 roughness 0.8 metalness 0 }
+        geometry Sphere { radius 0.05 subdivision 2 }
+      } ]
+      boundingObject Sphere { radius 0.05 }
+      physics Physics { density -1 mass 0.2 }
+    }
+    Solid {
+      translation -0.36 0 -0.10
+      name "rear_support"
+      contactMaterial "support"
+      children [ Shape {
+        appearance PBRAppearance { baseColor 0.2 0.2 0.2 roughness 0.8 metalness 0 }
+        geometry Sphere { radius 0.05 subdivision 2 }
+      } ]
+      boundingObject Sphere { radius 0.05 }
+      physics Physics { density -1 mass 0.2 }
+    }
+    # Visual telescopic actuator sleeve, recessed into the chassis.
+    # The SliderJoint supplies the physical constraint; these nested visuals
+    # deliberately have no overlapping internal collision boxes.
+    Pose { translation 0 0 0.09 children [ Shape {
+      appearance PBRAppearance { baseColor 0.16 0.18 0.20 roughness 0.5 metalness 0.6 }
+      geometry Cylinder { radius 0.075 height 0.24 }
+    } ] }
+    SliderJoint {
+      # Keep mechanical stops outside commanded travel to avoid stop/motor chatter.
+      jointParameters JointParameters { axis 0 0 1 minStop -0.005 maxStop 0.225 dampingConstant 20 }
+      device [
+        LinearMotor { name "lift_motor" minPosition 0 maxPosition 0.22 maxVelocity 0.04 maxForce 1500 }
+        PositionSensor { name "lift_sensor" }
+      ]
+      endPoint Solid {
+        translation 0 0 0.23
+        name "lift_platform"
+        children [ Shape {
+          appearance PBRAppearance { baseColor 0.2 0.3 0.4 roughness 0.8 metalness 0 }
+          geometry Box { size 0.70 0.60 0.04 }
+        }
+          Pose { translation 0 0 -0.145 children [ Shape {
+            appearance PBRAppearance { baseColor 0.65 0.68 0.72 roughness 0.25 metalness 0.85 }
+            geometry Cylinder { radius 0.045 height 0.25 }
+          } ] }
+        ]
+        boundingObject Box { size 0.70 0.60 0.04 }
+        physics Physics { density -1 mass 5 }
+      }
+    }
+    Lidar {
+      translation 0.47 0 0.13
+      name "front_lidar"
+      horizontalResolution 360
+      fieldOfView 3.14159265359
+      verticalFieldOfView 0.05
+      numberOfLayers 1
+      minRange 0.05
+      maxRange 12
+      children [ Shape {
+        appearance PBRAppearance { baseColor 0.1 0.1 0.1 roughness 1 metalness 0 }
+        geometry Box { size 0.04 0.06 0.04 }
+      } ]
+      boundingObject Box { size 0.04 0.06 0.04 }
+      physics Physics { density -1 mass 0.1 }
+    }
+  ]
+  boundingObject Pose { translation 0 0 0.10 children [ Box { size 0.90 0.62 0.18 } ] }
+  physics Physics { density -1 mass 40 centerOfMass [ 0 0 0.07 ] }
+}
+}
