@@ -21,6 +21,8 @@ This file records the features implemented by each group member. It can be used 
 - Added Matplotlib visualisation for the map, start point, goal point, obstacles, and calculated route.
 - Added command-line execution with optional visual output, together with a shell wrapper for Linux.
 - Added unit tests and example map data for checking successful pathfinding, unreachable goals, and matching confidence-grid dimensions.
+- Added a SQLite event store for recording robot, task, run, map, position, and event-specific data.
+- Added five initial navigation event types and straight-line visited-path segments for later visit, congestion, human-presence, rerouting, and bottleneck analysis.
 
 ### Usage
 
