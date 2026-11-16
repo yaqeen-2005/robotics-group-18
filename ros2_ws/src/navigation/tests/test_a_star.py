@@ -2,7 +2,7 @@ import unittest
 from pathlib import Path
 
 from a_star import plan_path
-from confidence_io import load_confidence
+from cell_attributes import BLOCKAGE_PROBABILITY, CellAttributeMap
 from map_io import load_text_map
 
 
@@ -17,14 +17,14 @@ class AStarTest(unittest.TestCase):
         self.assertEqual(path[-1], goal)
         self.assertTrue(all(grid[y][x] == 0 for x, y in path))
 
-    def test_confidence_grid_matches_map(self) -> None:
+    def test_attribute_grid_matches_map_and_updates_a_cell(self) -> None:
         maps = Path(__file__).parent / "maps"
         grid, _, _ = load_text_map(maps / "demo_map.txt")
-        confidence = load_confidence(
-            maps / "demo_confidence.txt", len(grid[0]), len(grid)
+        attributes = CellAttributeMap.load(
+            maps / "demo_attributes.txt", len(grid[0]), len(grid)
         )
-        self.assertEqual(len(confidence), len(grid))
-        self.assertEqual(len(confidence[0]), len(grid[0]))
+        attributes.update_cell(2, 1, BLOCKAGE_PROBABILITY, 0.75)
+        self.assertEqual(attributes.values[1][2][BLOCKAGE_PROBABILITY], 0.75)
 
     def test_returns_empty_list_when_no_path_exists(self) -> None:
         grid = [[0, 100, 0], [0, 100, 0], [0, 100, 0]]
