@@ -1,4 +1,9 @@
 # Autonomous Pallet Transport Robot for a Simulated Warehouse 
+> The latest scope is **Cargo Aware Autonomous Pallet Transport Robot**.
+> The original proposal below is retained as history; current implementation,
+> ownership and remaining robot tasks are described in the
+> [robot design and team guide](ros2_ws/src/robot_description/README.md).
+
 Group 18: Peifeng Xu, Sirui Meng, Thomas Morris, Yaqeen Bharoochi, Yi Gu. 
 Objective: Develop and evaluate an autonomous pallet transport robot that fulfils pickup and 
 delivery requests in a simulated warehouse while avoiding obstacles and reported hazards. 
@@ -27,6 +32,9 @@ This project targets the following software versions:
 ROS 2 Jazzy and Gazebo Harmonic are the recommended stable ROS/Gazebo combination for Ubuntu 24.04 LTS.
 
 ## Minimum Working Version 
+For the stock Ridgeback and fixed-platform warehouse setup, see the
+[warehouse simulation instructions](ros2_ws/src/warehouse_simulation/README.md).
+
 Our minimum requirements are autonomous SLAM mapping of an initially unknown warehouse, 
 followed by localisation and navigation.  The robot will plan routes on its SLAM-generated map 
 and distinguish temporary from persistent obstacles to wait, avoid or replan.  For the main 

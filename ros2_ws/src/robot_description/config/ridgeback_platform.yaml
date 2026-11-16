@@ -1,0 +1,26 @@
+serial_number: r100-0000
+version: 0
+system:
+  hosts:
+    - hostname: cpr-r100-0000
+      ip: 192.168.131.1
+  ros2:
+    namespace: r100_0000
+platform:
+  controller: ps4
+  mcu:
+    protocol: proton
+sensors:
+  lidar2d:
+    - model: hokuyo_ust
+      parent: chassis_link
+      xyz: [0.3922, 0.0, 0.1856]
+links:
+  box:
+    # Fixed geometry prototype: Clearpath's box macro has no added inertia.
+    # default_mount is z=0.295 m in base_link; bottom sits on that frame.
+    - name: pallet_platform
+      parent: default_mount
+      xyz: [0.0, 0.0, 0.02]
+      rpy: [0.0, 0.0, 0.0]
+      size: [0.70, 0.60, 0.04]
