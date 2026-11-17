@@ -12,10 +12,10 @@
       "total_mass_kg": 10,
       "handling": "normal",
       "centered_combined_rectangle_m": [
-        0.98,
+        1.08,
         1.2
       ],
-      "centered_clearance_radius_m": 0.8246612162745726
+      "centered_clearance_radius_m": 0.8572174428244227
     },
     "wide": {
       "deck_size_m": [
@@ -60,10 +60,10 @@
       "total_mass_kg": 40,
       "handling": "heavy",
       "centered_combined_rectangle_m": [
-        0.98,
+        1.08,
         1.2
       ],
-      "centered_clearance_radius_m": 0.8246612162745726
+      "centered_clearance_radius_m": 0.8572174428244227
     },
     "fragile": {
       "deck_size_m": [
@@ -76,10 +76,10 @@
       "total_mass_kg": 8,
       "handling": "fragile",
       "centered_combined_rectangle_m": [
-        0.98,
+        1.08,
         1.2
       ],
-      "centered_clearance_radius_m": 0.8246612162745726
+      "centered_clearance_radius_m": 0.8572174428244227
     }
   }
 }

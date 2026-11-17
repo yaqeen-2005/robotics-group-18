@@ -9,11 +9,20 @@ import unittest
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'controllers/warehouse_manager'))
 sys.path.insert(0,str(ROOT/'tools'))
-from scenario import Scenario, actor_pose
+from scenario import Scenario, actor_pose, near_robot
 from build_integration_world import build
 
 
 class ScenarioTests(unittest.TestCase):
+    def test_proximity_stop_and_restart_clearance(self):
+        # Person approaching the enlarged empty robot.
+        self.assertFalse(near_robot([1.3,0],[1.3,0],.32,[0,0],.71,False))
+        self.assertTrue(near_robot([1.3,0],[1.2,0],.32,[0,0],.71,False))
+        self.assertTrue(near_robot([1.3,0],[1.3,0],.32,[0,0],.71,True))
+        self.assertFalse(near_robot([1.4,0],[1.4,0],.32,[0,0],.71,True))
+        # Forklift and nearby cargo require more clearance.
+        self.assertTrue(near_robot([2.9,0],[2.8,0],1.55,[0,0],1.08,False))
+
     def setUp(self):
         self.config=json.loads((ROOT/'config/integration_scenario.json').read_text())
 
@@ -59,7 +68,7 @@ class ScenarioTests(unittest.TestCase):
         def reachable(radius, closed):
             rects=[(o['center'],o['size']) for o in obstacles]
             for x,width in closed: rects.append(([x,0],[width,.25]))
-            spacing=.1; inflated=radius+spacing*math.sqrt(2)/2
+            spacing=.05; inflated=radius+spacing*math.sqrt(2)/2
             def free(ix,iy):
                 x,y=ix*spacing,iy*spacing
                 if abs(x)>12-inflated or abs(y)>9-inflated: return False
@@ -67,7 +76,7 @@ class ScenarioTests(unittest.TestCase):
                     dx=max(abs(x-cx)-sx/2,0); dy=max(abs(y-cy)-sy/2,0)
                     if dx*dx+dy*dy < inflated*inflated: return False
                 return True
-            start=(-60,-16); end=(-60,16)
+            start=(-120,-32); end=(-120,32)
             todo=collections.deque([start]); seen={start}
             while todo:
                 cell=todo.popleft()
@@ -77,7 +86,7 @@ class ScenarioTests(unittest.TestCase):
                     if nxt not in seen and free(*nxt): seen.add(nxt); todo.append(nxt)
             return False
         # Radius includes the shared 5 cm planner margin.
-        empty=math.hypot(.98,.84)/2+.05
+        empty=math.hypot(1.08,.92)/2+.05
         wide=math.hypot(1.2,1.8)/2+.05
         self.assertTrue(reachable(wide,[]))
         self.assertTrue(reachable(empty,[(6,3.2)]))

@@ -65,3 +65,10 @@ class Scenario:
         # Only explicitly reported hazards cross into the navigation interface.
         return [dict(id=s['id'], center=s['center'], size=s['size'])
                 for s in self.spills if s['present'] and s['reported']]
+
+
+def near_robot(current, proposed, actor_radius, robot_xy, robot_radius, stopped):
+    """Stop before contact; extra restart clearance prevents stop/start chatter."""
+    clearance = .35 if stopped else .20
+    distance = min(math.dist(current, robot_xy), math.dist(proposed, robot_xy))
+    return distance < actor_radius + robot_radius + clearance

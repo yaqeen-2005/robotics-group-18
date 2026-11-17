@@ -45,12 +45,12 @@ for name, pos, size in [
     ('shelf_east','5 3 0.75','1 2 1.5'),
 ]:
     world += box(name, pos, size)
-# Rails support the outer edge of a pallet, leaving a 0.96m entry opening.
-# Enter along +x/-x. Robot total width is 0.84m. Rail top = 0.48m.
+# Rails support the outer edge of a pallet, leaving a 1.04m entry opening.
+# Enter along +x/-x. Robot total width is 0.92m. Rail top = 0.48m.
 for name, x, y, color in [('normal_pickup',-3,-3,'0.2 0.65 0.25'), ('wide_pickup',3,-3,'0.8 0.55 0.1'), ('delivery',-3,3,'0.2 0.35 0.8')]:
-    world += box(name+'_marker', f'{x} {y} 0.002', '1.6 1.6 0.004', color, False)
+    world += box(name+'_marker', f'{x} {y} 0.002', '1.8 1.8 0.004', color, False)
     for side in [-1,1]:
-        world += box(name+('_left' if side==1 else '_right'), f'{x} {y+side*0.54} 0.24', '1.25 0.12 0.48', color)
+        world += box(name+('_left' if side==1 else '_right'), f'{x} {y+side*0.58} 0.24', '1.45 0.12 0.48', color)
 world += '''DEF NORMAL_PALLET Pallet { translation -3 -3 0.52 name "normal_pallet" }
 DEF WIDE_PALLET Pallet { translation 3 -3 0.52 name "wide_pallet" size 1.2 1.4 0.08 mass 15 color 0.8 0.5 0.15 }
 DEF TRANSPORT_ROBOT PalletRobot { translation -4.8 -3 0.16 }

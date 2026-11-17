@@ -69,9 +69,9 @@ DirectionalLight { direction -0.4 0.3 -1 intensity 1 castShadows FALSE }
 ''')
 
     def stand(name, x, y, color):
-        box(name+'_pad', [x,y,0.002], [2.2,2.1,0.004], color, False)
+        box(name+'_pad', [x,y,0.002], [2.4,2.3,0.004], color, False)
         for side in (-1,1):
-            box(name+str(side), [x,y+side*.54,.24], [2.1,.12,.48], color)
+            box(name+str(side), [x,y+side*.58,.24], [2.3,.12,.48], color)
         sign(name.upper().replace('_',' '), x, y-1.35)
 
     box('floor', [0,0,-.1], [24.3,18.3,.2], (.73,.75,.76), floor=True)
@@ -202,7 +202,7 @@ if __name__ == '__main__':
     catalog={}
     for p in config['loads']:
         length,width,_=p['deck_size']
-        combined=[max(.98,length),max(.84,width)]
+        combined=[max(1.08,length),max(.92,width)]
         catalog[p['id']]=dict(deck_size_m=p['deck_size'],cargo_height_m=p['cargo_height'],
             total_height_m=.08+p['cargo_height'],total_mass_kg=p['mass_kg'],handling=p['handling'],
             centered_combined_rectangle_m=combined,

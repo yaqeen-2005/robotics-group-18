@@ -8,7 +8,7 @@ from pathlib import Path
 import sys
 
 from controller import Supervisor
-from scenario import Scenario, actor_pose
+from scenario import Scenario, actor_pose, near_robot
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT/'tools'))
@@ -54,6 +54,7 @@ def main():
     smoke = '--smoke' in sys.argv
     smoke_done = set()
     actor_times = {a['id']:0.0 for a in config['actors']}
+    yielding = {a['id']:False for a in config['actors']}
 
     def log(kind, **data):
         events_file.write(json.dumps(dict(time=now, event=kind, **data))+'\n')
@@ -65,7 +66,7 @@ def main():
 
     def occupants():
         # Conservative circles are used ONLY to prevent spawning into objects.
-        yield nodes['TRANSPORT_ROBOT'].getPosition(), .70
+        yield nodes['TRANSPORT_ROBOT'].getPosition(), .71
         for node,p in loads:
             yield node.getPosition(), math.hypot(*p['deck_size'][:2])/2
         for actor in config['actors']:
@@ -90,7 +91,7 @@ def main():
         nonlocal output_count
         profile=config['loads'][selected]
         xy=config['output_station']
-        if not clear_rectangle(xy,[1.2,1.05]):
+        if not clear_rectangle(xy,[1.3,1.15]):
             raise ValueError('Storage output occupied. Clear the previous pallet and robot first.')
         output_count += 1
         name='OUTPUT_'+str(output_count)
@@ -211,13 +212,25 @@ def main():
                     result.update(ok=False,reason=str(exc))
                 emitter.send(json.dumps(result).encode('utf-8'))
             for changed in state.advance(step/1000): log('random_spill_change',id=changed)
+            robot_xy=nodes['TRANSPORT_ROBOT'].getPosition()[:2]
+            robot_radius=math.hypot(1.08,.92)/2
+            # Include nearby cargo conservatively, without treating proximity as attachment.
+            for load,profile in loads:
+                separation=math.dist(load.getPosition()[:2],robot_xy)
+                if separation<1.0:
+                    robot_radius=max(robot_radius,separation+math.hypot(*profile['deck_size'][:2])/2)
             for actor in config['actors']:
                 actor_time=actor_times[actor['id']] + (step/1000 if state.traffic_enabled else 0)
                 xy,heading=actor_pose(actor,actor_time)
                 radius=1.55 if actor['kind']=='forklift' else .32
+                current=nodes[actor['id']].getPosition()[:2]
+                should_yield=near_robot(current,xy,radius,robot_xy,robot_radius,yielding[actor['id']])
+                if should_yield != yielding[actor['id']]:
+                    log('traffic_yield',id=actor['id'],stopped=should_yield)
+                    yielding[actor['id']]=should_yield
                 obstructed=any(closed and abs(xy[0]-x)<width/2+radius and abs(xy[1])<.125+radius
                     for name,x,width in [('narrow',-6,1.6),('wide',6,3.2)] for closed in [gates[name]])
-                if not obstructed:
+                if not obstructed and not should_yield:
                     actor_times[actor['id']]=actor_time
                 else:
                     xy,heading=actor_pose(actor,actor_times[actor['id']])

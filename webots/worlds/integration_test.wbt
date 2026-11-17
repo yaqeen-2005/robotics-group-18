@@ -458,20 +458,20 @@ Pose { translation -10.8 -8 0.012 children [ Shape {
 Solid {
   translation -9 -6 0.002 name "standard_pad"
   
-  children [ Shape { appearance PBRAppearance { baseColor 0.3 0.65 0.3 roughness 0.8 metalness 0 } geometry Box { size 2.2 2.1 0.004 } } ]
+  children [ Shape { appearance PBRAppearance { baseColor 0.3 0.65 0.3 roughness 0.8 metalness 0 } geometry Box { size 2.4 2.3 0.004 } } ]
   
 }
 Solid {
-  translation -9 -6.54 0.24 name "standard-1"
+  translation -9 -6.58 0.24 name "standard-1"
   
-  children [ Shape { appearance PBRAppearance { baseColor 0.3 0.65 0.3 roughness 0.8 metalness 0 } geometry Box { size 2.1 0.12 0.48 } } ]
-  boundingObject Box { size 2.1 0.12 0.48 }
+  children [ Shape { appearance PBRAppearance { baseColor 0.3 0.65 0.3 roughness 0.8 metalness 0 } geometry Box { size 2.3 0.12 0.48 } } ]
+  boundingObject Box { size 2.3 0.12 0.48 }
 }
 Solid {
-  translation -9 -5.46 0.24 name "standard1"
+  translation -9 -5.42 0.24 name "standard1"
   
-  children [ Shape { appearance PBRAppearance { baseColor 0.3 0.65 0.3 roughness 0.8 metalness 0 } geometry Box { size 2.1 0.12 0.48 } } ]
-  boundingObject Box { size 2.1 0.12 0.48 }
+  children [ Shape { appearance PBRAppearance { baseColor 0.3 0.65 0.3 roughness 0.8 metalness 0 } geometry Box { size 2.3 0.12 0.48 } } ]
+  boundingObject Box { size 2.3 0.12 0.48 }
 }
 Pose { translation -9 -7.35 0.012 children [ Shape {
  appearance PBRAppearance { baseColorMap ImageTexture { url [ "../textures/integration_labels/335fd665f279.png" ] } roughness 1 metalness 0 }
@@ -485,20 +485,20 @@ DEF LOAD_STANDARD TestLoad {
 Solid {
   translation -4.5 -6 0.002 name "wide_pad"
   
-  children [ Shape { appearance PBRAppearance { baseColor 0.9 0.55 0.12 roughness 0.8 metalness 0 } geometry Box { size 2.2 2.1 0.004 } } ]
+  children [ Shape { appearance PBRAppearance { baseColor 0.9 0.55 0.12 roughness 0.8 metalness 0 } geometry Box { size 2.4 2.3 0.004 } } ]
   
 }
 Solid {
-  translation -4.5 -6.54 0.24 name "wide-1"
+  translation -4.5 -6.58 0.24 name "wide-1"
   
-  children [ Shape { appearance PBRAppearance { baseColor 0.9 0.55 0.12 roughness 0.8 metalness 0 } geometry Box { size 2.1 0.12 0.48 } } ]
-  boundingObject Box { size 2.1 0.12 0.48 }
+  children [ Shape { appearance PBRAppearance { baseColor 0.9 0.55 0.12 roughness 0.8 metalness 0 } geometry Box { size 2.3 0.12 0.48 } } ]
+  boundingObject Box { size 2.3 0.12 0.48 }
 }
 Solid {
-  translation -4.5 -5.46 0.24 name "wide1"
+  translation -4.5 -5.42 0.24 name "wide1"
   
-  children [ Shape { appearance PBRAppearance { baseColor 0.9 0.55 0.12 roughness 0.8 metalness 0 } geometry Box { size 2.1 0.12 0.48 } } ]
-  boundingObject Box { size 2.1 0.12 0.48 }
+  children [ Shape { appearance PBRAppearance { baseColor 0.9 0.55 0.12 roughness 0.8 metalness 0 } geometry Box { size 2.3 0.12 0.48 } } ]
+  boundingObject Box { size 2.3 0.12 0.48 }
 }
 Pose { translation -4.5 -7.35 0.012 children [ Shape {
  appearance PBRAppearance { baseColorMap ImageTexture { url [ "../textures/integration_labels/f7f49fc699ef.png" ] } roughness 1 metalness 0 }
@@ -512,20 +512,20 @@ DEF LOAD_WIDE TestLoad {
 Solid {
   translation 0 -6 0.002 name "long_pad"
   
-  children [ Shape { appearance PBRAppearance { baseColor 0.5 0.3 0.7 roughness 0.8 metalness 0 } geometry Box { size 2.2 2.1 0.004 } } ]
+  children [ Shape { appearance PBRAppearance { baseColor 0.5 0.3 0.7 roughness 0.8 metalness 0 } geometry Box { size 2.4 2.3 0.004 } } ]
   
 }
 Solid {
-  translation 0 -6.54 0.24 name "long-1"
+  translation 0 -6.58 0.24 name "long-1"
   
-  children [ Shape { appearance PBRAppearance { baseColor 0.5 0.3 0.7 roughness 0.8 metalness 0 } geometry Box { size 2.1 0.12 0.48 } } ]
-  boundingObject Box { size 2.1 0.12 0.48 }
+  children [ Shape { appearance PBRAppearance { baseColor 0.5 0.3 0.7 roughness 0.8 metalness 0 } geometry Box { size 2.3 0.12 0.48 } } ]
+  boundingObject Box { size 2.3 0.12 0.48 }
 }
 Solid {
-  translation 0 -5.46 0.24 name "long1"
+  translation 0 -5.42 0.24 name "long1"
   
-  children [ Shape { appearance PBRAppearance { baseColor 0.5 0.3 0.7 roughness 0.8 metalness 0 } geometry Box { size 2.1 0.12 0.48 } } ]
-  boundingObject Box { size 2.1 0.12 0.48 }
+  children [ Shape { appearance PBRAppearance { baseColor 0.5 0.3 0.7 roughness 0.8 metalness 0 } geometry Box { size 2.3 0.12 0.48 } } ]
+  boundingObject Box { size 2.3 0.12 0.48 }
 }
 Pose { translation 0 -7.35 0.012 children [ Shape {
  appearance PBRAppearance { baseColorMap ImageTexture { url [ "../textures/integration_labels/a8f3862b9630.png" ] } roughness 1 metalness 0 }
@@ -539,20 +539,20 @@ DEF LOAD_LONG TestLoad {
 Solid {
   translation 4.5 -6 0.002 name "heavy_pad"
   
-  children [ Shape { appearance PBRAppearance { baseColor 0.25 0.35 0.6 roughness 0.8 metalness 0 } geometry Box { size 2.2 2.1 0.004 } } ]
+  children [ Shape { appearance PBRAppearance { baseColor 0.25 0.35 0.6 roughness 0.8 metalness 0 } geometry Box { size 2.4 2.3 0.004 } } ]
   
 }
 Solid {
-  translation 4.5 -6.54 0.24 name "heavy-1"
+  translation 4.5 -6.58 0.24 name "heavy-1"
   
-  children [ Shape { appearance PBRAppearance { baseColor 0.25 0.35 0.6 roughness 0.8 metalness 0 } geometry Box { size 2.1 0.12 0.48 } } ]
-  boundingObject Box { size 2.1 0.12 0.48 }
+  children [ Shape { appearance PBRAppearance { baseColor 0.25 0.35 0.6 roughness 0.8 metalness 0 } geometry Box { size 2.3 0.12 0.48 } } ]
+  boundingObject Box { size 2.3 0.12 0.48 }
 }
 Solid {
-  translation 4.5 -5.46 0.24 name "heavy1"
+  translation 4.5 -5.42 0.24 name "heavy1"
   
-  children [ Shape { appearance PBRAppearance { baseColor 0.25 0.35 0.6 roughness 0.8 metalness 0 } geometry Box { size 2.1 0.12 0.48 } } ]
-  boundingObject Box { size 2.1 0.12 0.48 }
+  children [ Shape { appearance PBRAppearance { baseColor 0.25 0.35 0.6 roughness 0.8 metalness 0 } geometry Box { size 2.3 0.12 0.48 } } ]
+  boundingObject Box { size 2.3 0.12 0.48 }
 }
 Pose { translation 4.5 -7.35 0.012 children [ Shape {
  appearance PBRAppearance { baseColorMap ImageTexture { url [ "../textures/integration_labels/e8a86a3fe825.png" ] } roughness 1 metalness 0 }
@@ -566,20 +566,20 @@ DEF LOAD_HEAVY TestLoad {
 Solid {
   translation 9 -6 0.002 name "fragile_pad"
   
-  children [ Shape { appearance PBRAppearance { baseColor 0.85 0.3 0.4 roughness 0.8 metalness 0 } geometry Box { size 2.2 2.1 0.004 } } ]
+  children [ Shape { appearance PBRAppearance { baseColor 0.85 0.3 0.4 roughness 0.8 metalness 0 } geometry Box { size 2.4 2.3 0.004 } } ]
   
 }
 Solid {
-  translation 9 -6.54 0.24 name "fragile-1"
+  translation 9 -6.58 0.24 name "fragile-1"
   
-  children [ Shape { appearance PBRAppearance { baseColor 0.85 0.3 0.4 roughness 0.8 metalness 0 } geometry Box { size 2.1 0.12 0.48 } } ]
-  boundingObject Box { size 2.1 0.12 0.48 }
+  children [ Shape { appearance PBRAppearance { baseColor 0.85 0.3 0.4 roughness 0.8 metalness 0 } geometry Box { size 2.3 0.12 0.48 } } ]
+  boundingObject Box { size 2.3 0.12 0.48 }
 }
 Solid {
-  translation 9 -5.46 0.24 name "fragile1"
+  translation 9 -5.42 0.24 name "fragile1"
   
-  children [ Shape { appearance PBRAppearance { baseColor 0.85 0.3 0.4 roughness 0.8 metalness 0 } geometry Box { size 2.1 0.12 0.48 } } ]
-  boundingObject Box { size 2.1 0.12 0.48 }
+  children [ Shape { appearance PBRAppearance { baseColor 0.85 0.3 0.4 roughness 0.8 metalness 0 } geometry Box { size 2.3 0.12 0.48 } } ]
+  boundingObject Box { size 2.3 0.12 0.48 }
 }
 Pose { translation 9 -7.35 0.012 children [ Shape {
  appearance PBRAppearance { baseColorMap ImageTexture { url [ "../textures/integration_labels/2475b587511c.png" ] } roughness 1 metalness 0 }
@@ -593,20 +593,20 @@ DEF LOAD_FRAGILE TestLoad {
 Solid {
   translation -4 6.5 0.002 name "delivery_1_pad"
   
-  children [ Shape { appearance PBRAppearance { baseColor 0.2 0.45 0.8 roughness 0.8 metalness 0 } geometry Box { size 2.2 2.1 0.004 } } ]
+  children [ Shape { appearance PBRAppearance { baseColor 0.2 0.45 0.8 roughness 0.8 metalness 0 } geometry Box { size 2.4 2.3 0.004 } } ]
   
 }
 Solid {
-  translation -4 5.96 0.24 name "delivery_1-1"
+  translation -4 5.92 0.24 name "delivery_1-1"
   
-  children [ Shape { appearance PBRAppearance { baseColor 0.2 0.45 0.8 roughness 0.8 metalness 0 } geometry Box { size 2.1 0.12 0.48 } } ]
-  boundingObject Box { size 2.1 0.12 0.48 }
+  children [ Shape { appearance PBRAppearance { baseColor 0.2 0.45 0.8 roughness 0.8 metalness 0 } geometry Box { size 2.3 0.12 0.48 } } ]
+  boundingObject Box { size 2.3 0.12 0.48 }
 }
 Solid {
-  translation -4 7.04 0.24 name "delivery_11"
+  translation -4 7.08 0.24 name "delivery_11"
   
-  children [ Shape { appearance PBRAppearance { baseColor 0.2 0.45 0.8 roughness 0.8 metalness 0 } geometry Box { size 2.1 0.12 0.48 } } ]
-  boundingObject Box { size 2.1 0.12 0.48 }
+  children [ Shape { appearance PBRAppearance { baseColor 0.2 0.45 0.8 roughness 0.8 metalness 0 } geometry Box { size 2.3 0.12 0.48 } } ]
+  boundingObject Box { size 2.3 0.12 0.48 }
 }
 Pose { translation -4 5.15 0.012 children [ Shape {
  appearance PBRAppearance { baseColorMap ImageTexture { url [ "../textures/integration_labels/55461f6e740b.png" ] } roughness 1 metalness 0 }
@@ -615,20 +615,20 @@ Pose { translation -4 5.15 0.012 children [ Shape {
 Solid {
   translation 2 6.5 0.002 name "delivery_2_pad"
   
-  children [ Shape { appearance PBRAppearance { baseColor 0.2 0.45 0.8 roughness 0.8 metalness 0 } geometry Box { size 2.2 2.1 0.004 } } ]
+  children [ Shape { appearance PBRAppearance { baseColor 0.2 0.45 0.8 roughness 0.8 metalness 0 } geometry Box { size 2.4 2.3 0.004 } } ]
   
 }
 Solid {
-  translation 2 5.96 0.24 name "delivery_2-1"
+  translation 2 5.92 0.24 name "delivery_2-1"
   
-  children [ Shape { appearance PBRAppearance { baseColor 0.2 0.45 0.8 roughness 0.8 metalness 0 } geometry Box { size 2.1 0.12 0.48 } } ]
-  boundingObject Box { size 2.1 0.12 0.48 }
+  children [ Shape { appearance PBRAppearance { baseColor 0.2 0.45 0.8 roughness 0.8 metalness 0 } geometry Box { size 2.3 0.12 0.48 } } ]
+  boundingObject Box { size 2.3 0.12 0.48 }
 }
 Solid {
-  translation 2 7.04 0.24 name "delivery_21"
+  translation 2 7.08 0.24 name "delivery_21"
   
-  children [ Shape { appearance PBRAppearance { baseColor 0.2 0.45 0.8 roughness 0.8 metalness 0 } geometry Box { size 2.1 0.12 0.48 } } ]
-  boundingObject Box { size 2.1 0.12 0.48 }
+  children [ Shape { appearance PBRAppearance { baseColor 0.2 0.45 0.8 roughness 0.8 metalness 0 } geometry Box { size 2.3 0.12 0.48 } } ]
+  boundingObject Box { size 2.3 0.12 0.48 }
 }
 Pose { translation 2 5.15 0.012 children [ Shape {
  appearance PBRAppearance { baseColorMap ImageTexture { url [ "../textures/integration_labels/855f53260368.png" ] } roughness 1 metalness 0 }
@@ -637,20 +637,20 @@ Pose { translation 2 5.15 0.012 children [ Shape {
 Solid {
   translation 8 6.5 0.002 name "delivery_3_pad"
   
-  children [ Shape { appearance PBRAppearance { baseColor 0.2 0.45 0.8 roughness 0.8 metalness 0 } geometry Box { size 2.2 2.1 0.004 } } ]
+  children [ Shape { appearance PBRAppearance { baseColor 0.2 0.45 0.8 roughness 0.8 metalness 0 } geometry Box { size 2.4 2.3 0.004 } } ]
   
 }
 Solid {
-  translation 8 5.96 0.24 name "delivery_3-1"
+  translation 8 5.92 0.24 name "delivery_3-1"
   
-  children [ Shape { appearance PBRAppearance { baseColor 0.2 0.45 0.8 roughness 0.8 metalness 0 } geometry Box { size 2.1 0.12 0.48 } } ]
-  boundingObject Box { size 2.1 0.12 0.48 }
+  children [ Shape { appearance PBRAppearance { baseColor 0.2 0.45 0.8 roughness 0.8 metalness 0 } geometry Box { size 2.3 0.12 0.48 } } ]
+  boundingObject Box { size 2.3 0.12 0.48 }
 }
 Solid {
-  translation 8 7.04 0.24 name "delivery_31"
+  translation 8 7.08 0.24 name "delivery_31"
   
-  children [ Shape { appearance PBRAppearance { baseColor 0.2 0.45 0.8 roughness 0.8 metalness 0 } geometry Box { size 2.1 0.12 0.48 } } ]
-  boundingObject Box { size 2.1 0.12 0.48 }
+  children [ Shape { appearance PBRAppearance { baseColor 0.2 0.45 0.8 roughness 0.8 metalness 0 } geometry Box { size 2.3 0.12 0.48 } } ]
+  boundingObject Box { size 2.3 0.12 0.48 }
 }
 Pose { translation 8 5.15 0.012 children [ Shape {
  appearance PBRAppearance { baseColorMap ImageTexture { url [ "../textures/integration_labels/f1cea5ee1921.png" ] } roughness 1 metalness 0 }
@@ -659,20 +659,20 @@ Pose { translation 8 5.15 0.012 children [ Shape {
 Solid {
   translation -9 3 0.002 name "storage_output_pad"
   
-  children [ Shape { appearance PBRAppearance { baseColor 0.2 0.7 0.6 roughness 0.8 metalness 0 } geometry Box { size 2.2 2.1 0.004 } } ]
+  children [ Shape { appearance PBRAppearance { baseColor 0.2 0.7 0.6 roughness 0.8 metalness 0 } geometry Box { size 2.4 2.3 0.004 } } ]
   
 }
 Solid {
-  translation -9 2.46 0.24 name "storage_output-1"
+  translation -9 2.42 0.24 name "storage_output-1"
   
-  children [ Shape { appearance PBRAppearance { baseColor 0.2 0.7 0.6 roughness 0.8 metalness 0 } geometry Box { size 2.1 0.12 0.48 } } ]
-  boundingObject Box { size 2.1 0.12 0.48 }
+  children [ Shape { appearance PBRAppearance { baseColor 0.2 0.7 0.6 roughness 0.8 metalness 0 } geometry Box { size 2.3 0.12 0.48 } } ]
+  boundingObject Box { size 2.3 0.12 0.48 }
 }
 Solid {
-  translation -9 3.54 0.24 name "storage_output1"
+  translation -9 3.58 0.24 name "storage_output1"
   
-  children [ Shape { appearance PBRAppearance { baseColor 0.2 0.7 0.6 roughness 0.8 metalness 0 } geometry Box { size 2.1 0.12 0.48 } } ]
-  boundingObject Box { size 2.1 0.12 0.48 }
+  children [ Shape { appearance PBRAppearance { baseColor 0.2 0.7 0.6 roughness 0.8 metalness 0 } geometry Box { size 2.3 0.12 0.48 } } ]
+  boundingObject Box { size 2.3 0.12 0.48 }
 }
 Pose { translation -9 1.65 0.012 children [ Shape {
  appearance PBRAppearance { baseColorMap ImageTexture { url [ "../textures/integration_labels/0a5ec56dd8c9.png" ] } roughness 1 metalness 0 }

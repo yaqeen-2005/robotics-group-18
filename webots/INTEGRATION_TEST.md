@@ -38,7 +38,7 @@ Do not save moved pallets over the baseline world.
 Coordinates are metres, +x right/east, +y up/north in the overhead view, +z up.
 The robot starts at (-11, -6), facing the standard pallet. Enter pickup and
 delivery stands along the x axis, with the platform lowered and centred.
-Rails leave 0.96 m internal width and have 0.48 m tops.
+Rails leave 1.04 m internal width and have 0.48 m tops.
 
 The divider at y=0 has a 1.60 m shortcut centred at x=-6 and a 3.20 m wide
 passage at x=6. Shelves create detours and scan landmarks. A crate, column and
@@ -64,7 +64,7 @@ Mass changes physics but does not automatically change the controller settings.
 
 `config/load_catalog.json` contains geometry, mass, handling and conservative
 clearance estimates. Centred enclosing-circle diameters with a 0.05 m margin:
-empty ≈1.39 m, standard/heavy/fragile ≈1.65 m, wide/long ≈2.26 m. Thus the
+empty ≈1.52 m, standard/heavy/fragile ≈1.71 m, wide/long ≈2.26 m. Thus the
 circle-based planner should use the shortcut only while empty. The wide pallet
 also physically exceeds the shortcut's width in its initial orientation.
 Recompute combined bounds for real attachment offsets; never mark a robot loaded
@@ -75,9 +75,11 @@ solely because a pallet was requested or spawned.
 Two visible people shuttle across walkways; a forklift shuttles through the
 wide passage and reverses on its return leg. Their collision shapes are visible
 to sensors. The manager moves them on repeatable paths with endpoint dwell.
-They pause before a closed gate. They are prescribed kinematic obstacles:
-they do not yield to the robot, simulate human decisions or realistic impact
-dynamics. Robot avoidance and stopping are features for teammates to test.
+They pause before a closed gate. They stop near the robot using conservative circular envelopes plus a
+0.20 m gap, and resume once the gap exceeds 0.35 m. Nearby cargo within 1 m
+of the robot enlarges this envelope; this does not confirm attachment. They
+remain prescribed kinematic obstacles without realistic impact dynamics.
+The robot can still drive into a stopped actor; its own avoidance is required. Robot avoidance and stopping are features for teammates to test.
 
 Spills are flat visual hazard patches: amber = present/unreported, red =
 present/reported, absent = hidden. They do not form solid barriers or change
@@ -225,3 +227,12 @@ output spawning/occupied-bay rejection. This does not establish autonomous
 navigation, loaded transport stability or planner response to reported hazards.
 An additional controller verified radio status reception, report filtering,
 command acknowledgement and finite LiDAR obstacle returns in Webots.
+
+## Enlargement and traffic yielding (17 November 2026)
+
+Both worlds now use a 0.99 × 0.68 m chassis, 0.82 m wheel track and
+0.80 × 0.72 m platform. The empty envelope is 1.08 × 0.92 m.
+Pickup/delivery rails have 1.04 m internal clearance; stand lengths and pads
+were enlarged. Replacement odometry/controllers must use the new wheel track.
+Traffic yielding uses Supervisor ground truth solely to control scene actors;
+this position is not broadcast to robot navigation. Yield transitions are logged.

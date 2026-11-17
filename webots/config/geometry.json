@@ -3,23 +3,53 @@
   "units": "metres, radians, kilograms",
   "robot": {
     "wheel_radius": 0.15,
-    "wheel_track": 0.74,
-    "conservative_empty_rectangle": [0.98, 0.84],
-    "platform_size": [0.70, 0.60, 0.04],
-    "lift_travel": [0.0, 0.60],
+    "wheel_track": 0.82,
+    "conservative_empty_rectangle": [
+      1.08,
+      0.92
+    ],
+    "platform_size": [
+      0.8,
+      0.72,
+      0.04
+    ],
+    "lift_travel": [
+      0.0,
+      0.6
+    ],
     "lift_speed_m_s": 0.25,
-    "nominal_platform_top_above_floor": [0.40, 1.00],
+    "nominal_platform_top_above_floor": [
+      0.4,
+      1.0
+    ],
     "nominal_lidar_height": 0.28
   },
   "pallets": {
-    "normal": {"size": [0.8, 1.2, 0.08], "mass": 10},
-    "wide": {"size": [1.2, 1.4, 0.08], "mass": 15}
+    "normal": {
+      "size": [
+        0.8,
+        1.2,
+        0.08
+      ],
+      "mass": 10
+    },
+    "wide": {
+      "size": [
+        1.2,
+        1.4,
+        0.08
+      ],
+      "mass": 15
+    }
   },
   "warehouse": {
-    "interior": [12.0, 10.0],
+    "interior": [
+      12.0,
+      10.0
+    ],
     "shortcut_width": 1.6,
     "alternative_width": 2.4,
     "stand_top": 0.48,
-    "stand_entry_width": 0.96
+    "stand_entry_width": 1.04
   }
 }

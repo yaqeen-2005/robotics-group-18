@@ -25,7 +25,7 @@ for stage in lift_stages:
     stage.setVelocity(0.5)
 
 RADIUS = 0.15
-TRACK = 0.74
+TRACK = 0.82
 lift_target = 0.0
 previous = None
 stopped_for = 0.0
