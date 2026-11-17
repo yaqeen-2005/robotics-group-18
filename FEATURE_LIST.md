@@ -8,6 +8,12 @@ This file records the features implemented by each group member. It can be used 
 
 ## Thomas Morris:
 
+- Began migration of project to Webots including creation of basic Webots file structure.
+- Created basic test world geometry and textures.  This world features a small room the pallet robot can move around in with a pallet pickup and dropoff locations.
+- Created pallet robot controller and geometry.
+- Created advanced test world geometry and textures.  This world inlcudes obstacles such as shelves, multiple pickup and drop off locations with pallet sizes of different geometry, moving people and forklifts, gates that can be opened or closed, and spills that can be toggled on or off and can have their "reported" status toglled on and off and should aim to be avoided by the pallet robot if they have been reported.
+- Created controller and geometry for people, forklifts, moavable gates, and spills.
+
 ## Yaqeen Bharoochi:
 
 ## Yi Gu:
