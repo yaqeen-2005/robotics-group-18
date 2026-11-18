@@ -8,6 +8,9 @@ ROS 2 is not needed to open the warehouse or manually drive and lift.
 Open [`webots/worlds/warehouse.wbt`](webots/worlds/warehouse.wbt) in Webots.
 Read the [setup and manual acceptance checklist](webots/README.md) first.
 
+For the final project environment, open [Meridian distribution hall](webots/worlds/final_warehouse.wbt).
+The [final-world operator guide](webots/FINAL_WAREHOUSE.md) includes a floor plan, pickup instructions, team interfaces and the validated delivery run.
+
 For team feature integration, open
 [`webots/worlds/integration_test.wbt`](webots/worlds/integration_test.wbt).
 This larger test warehouse adds varied cargo, moving people/forklift, spill

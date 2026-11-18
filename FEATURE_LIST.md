@@ -8,11 +8,19 @@ This file records the features implemented by each group member. It can be used 
 
 ## Thomas Morris:
 
-- Began migration of project to Webots including creation of basic Webots file structure.
-- Created basic test world geometry and textures.  This world features a small room the pallet robot can move around in with a pallet pickup and dropoff locations.
-- Created pallet robot controller and geometry.
-- Created advanced test world geometry and textures.  This world inlcudes obstacles such as shelves, multiple pickup and drop off locations with pallet sizes of different geometry, moving people and forklifts, gates that can be opened or closed, and spills that can be toggled on or off and can have their "reported" status toglled on and off and should aim to be avoided by the pallet robot if they have been reported.
-- Created controller and geometry for people, forklifts, moavable gates, and spills.
+- Started the project's move to Webots and set up the directory structure for worlds, reusable models, textures and Python controllers. This gave the team a common simulator setup for testing individual components and integrating them later.
+- Modelled and textured the first 12 m by 10 m test warehouse. Added normal and wide pallets, pickup and drop-off stands, and narrow and wide passages so the team could check basic driving, lifting, pallet clearance and collisions in a small, repeatable layout.
+- Built the robot model with independently driven wheels, physical collision shapes, wheel encoders, a front LiDAR mount and a central telescopic lift. Wrote the Python keyboard controller for driving, turning and raising or lowering the platform. The controller requires the wheels to stop before the lift moves and holds the platform at its current height when the lift key is released.
+- Built and textured a 24 m by 18 m integration warehouse for testing team features together. Added storage racks, a dead-end bay, narrow and wide routes, a selectable pallet outfeed and three drop-off stands. Defined five load profiles with different dimensions, masses or handling requirements for clearance and motion-control trials.
+- Modelled the moving people, forklift, gates and spills and wrote the controller that runs those scenarios. It lets testers pause traffic, close either gate, introduce a timed blockage and control whether a spill is present or reported. The robot's radio interface sends reported spill locations to the navigation controller so the team can test treating them as forbidden areas.
+- Created the final 96 m by 64 m warehouse with separate picking, packing and stock areas, open loading floors and walled corridors. The robot can take a narrow shortcut when empty or use the wider perimeter roads when carrying a large pallet.
+- Added three roller pickup lanes to the storage wall. Each lane supplies a random pallet from five size, weight and handling profiles and assigns it to one of six drop off locations.
+- Added matching lights to the pickup and drop off locations, a display showing which parcel the robot is carrying, and pickup and delivery messages. Delivered pallets fade from the receiving stand.
+- Added seven people who walk within their work areas, give forklifts priority and return to a standing pose when they stop. Two forklifts move their own pallets between shelves and sampled floor locations, then return to collect them. Their routes are reserved to avoid conflicting trips.
+- Added timed gates and gates that open for approaching traffic. Spills can appear and be reported randomly or reported manually, and reported spills can be cleaned up while keeping between two and five spills active.
+- Tested a complete pickup and delivery in Webots, checked all five pallets on all six drop off stands, and checked that a loaded route remains available with all gates closed and all possible spills blocked.
+- Added slippery tyre contact for active spills and tested wheel encoder distance against actual robot travel on dry and wet floor.
+- Added recessed exterior walls, three marked entrance widths for cargo clearance trials, pallet stacks in the north stores, and wall-side workstations with chairs.
 
 ## Yaqeen Bharoochi:
 

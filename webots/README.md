@@ -1,5 +1,8 @@
 # Webots warehouse and pallet robot
 
+For the **final environment**, open [worlds/final_warehouse.wbt](worlds/final_warehouse.wbt).
+The [Meridian operator guide](FINAL_WAREHOUSE.md) covers the three-lane outfeed, highlighted destinations, working traffic, gates and spills.
+
 The additional **integration_test.wbt** world is described in
 [INTEGRATION_TEST.md](INTEGRATION_TEST.md), including spill/traffic controls,
 load profiles, team interfaces and validation. The original warehouse below
