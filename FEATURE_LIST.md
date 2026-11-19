@@ -38,25 +38,27 @@ This file records the features implemented by each group member. It can be used 
 - Added a SQLite event store for recording robot, task, run, map, position, and event-specific data.
 - Added five initial navigation event types and straight-line visited-path segments for later visit, congestion, human-presence, rerouting, and bottleneck analysis.
 - Added a lightweight YOLO26n camera component that returns person bounding boxes and confidence scores while keeping Webots and navigation integration separate.
+- Added basic frontier exploration that falls back from an unreachable A* goal to the nearest reachable unknown or low-confidence map boundary.
+- Added risk-aware A* costs for historical blockage, human presence, map uncertainty, and encounters with other robots, with replaceable weights for future ML tuning.
 
 ### Usage
 
 From `ros2_ws/src/navigation`, show the default map and calculated path:
 
 ```bash
-python run.py
+python -m astar.run
 ```
 
 Print the path without opening the visualisation:
 
 ```bash
-python run.py --no-visual
+python -m astar.run --no-visual
 ```
 
 Use a custom map:
 
 ```bash
-python run.py my_map.txt
+python -m astar.run my_map.txt
 ```
 
 Run the automated tests:

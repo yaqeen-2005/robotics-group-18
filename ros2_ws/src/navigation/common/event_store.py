@@ -17,9 +17,17 @@ HUMAN_DETECTED = "HUMAN_DETECTED"  # Estimate human presence by map area.
 PATH_BLOCKED = "PATH_BLOCKED"  # Estimate congestion and unreliable cells.
 REROUTE = "REROUTE"  # Measure route reliability after environmental changes.
 BACKTRACK = "BACKTRACK"  # Identify traffic conflicts and bottlenecks.
-EVENT_TYPES = {CELL_VISITED, HUMAN_DETECTED, PATH_BLOCKED, REROUTE, BACKTRACK}
+ROBOT_ENCOUNTERED = "ROBOT_ENCOUNTERED"  # Estimate multi-robot traffic risk.
+EVENT_TYPES = {
+    CELL_VISITED,
+    HUMAN_DETECTED,
+    PATH_BLOCKED,
+    REROUTE,
+    BACKTRACK,
+    ROBOT_ENCOUNTERED,
+}
 
-DEFAULT_EVENT_DATABASE = Path(__file__).parent / "tests" / "events.db"
+DEFAULT_EVENT_DATABASE = Path(__file__).parent.parent / "tests" / "events.db"
 
 
 def point(x: float, y: float) -> dict:

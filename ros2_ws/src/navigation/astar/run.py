@@ -4,10 +4,10 @@ import argparse
 import json
 from pathlib import Path
 
-from a_star import plan_path
-from map_io import load_text_map
+from astar.a_star import plan_path
+from common.map_io import load_text_map
 
-DEFAULT_MAP = Path(__file__).parent / "tests" / "maps" / "demo_map.txt"
+DEFAULT_MAP = Path(__file__).parent.parent / "tests" / "maps" / "demo_map.txt"
 
 
 def main() -> int:
@@ -22,7 +22,7 @@ def main() -> int:
     if args.no_visual:
         print(json.dumps(path))
     else:
-        from visualize import show_path
+        from astar.visualize import show_path
 
         show_path(grid, path, start, goal)
     return 0 if path else 1

@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from a_star import GridPoint
+GridPoint = tuple[int, int]
 
 SYMBOLS = {".": 0, "0": 0, "#": 100, "1": 100, "?": -1, "S": 0, "G": 0}
 

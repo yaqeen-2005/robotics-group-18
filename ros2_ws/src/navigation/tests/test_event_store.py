@@ -2,7 +2,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from event_store import CELL_VISITED, EventStore
+from common.event_store import CELL_VISITED, EventStore
 
 
 class EventStoreTest(unittest.TestCase):
