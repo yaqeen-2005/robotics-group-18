@@ -37,6 +37,7 @@ This file records the features implemented by each group member. It can be used 
 - Added unit tests and example map data for checking successful pathfinding, unreachable goals, and matching confidence-grid dimensions.
 - Added a SQLite event store for recording robot, task, run, map, position, and event-specific data.
 - Added five initial navigation event types and straight-line visited-path segments for later visit, congestion, human-presence, rerouting, and bottleneck analysis.
+- Added a lightweight YOLO26n camera component that returns person bounding boxes and confidence scores while keeping Webots and navigation integration separate.
 
 ### Usage
 

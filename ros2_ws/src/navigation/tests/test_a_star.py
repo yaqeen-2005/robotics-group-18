@@ -2,7 +2,7 @@ import unittest
 from pathlib import Path
 
 from a_star import plan_path
-from cell_attributes import BLOCKAGE_PROBABILITY, CellAttributeMap
+from cell_attributes import BLOCKAGE_PROBABILITY, load_cell_attributes
 from map_io import load_text_map
 
 
@@ -20,7 +20,7 @@ class AStarTest(unittest.TestCase):
     def test_attribute_grid_matches_map_and_updates_a_cell(self) -> None:
         maps = Path(__file__).parent / "maps"
         grid, _, _ = load_text_map(maps / "demo_map.txt")
-        attributes = CellAttributeMap.load(
+        attributes = load_cell_attributes(
             maps / "demo_attributes.txt", len(grid[0]), len(grid)
         )
         attributes.update_cell(2, 1, BLOCKAGE_PROBABILITY, 0.75)

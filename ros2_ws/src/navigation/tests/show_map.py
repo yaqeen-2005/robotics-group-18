@@ -10,7 +10,7 @@ from matplotlib.colors import ListedColormap
 NAVIGATION_DIR = Path(__file__).parent.parent
 sys.path.insert(0, str(NAVIGATION_DIR))
 
-from cell_attributes import ATTRIBUTE_NAMES, CellAttributeMap  # noqa: E402
+from cell_attributes import ATTRIBUTE_NAMES, load_cell_attributes  # noqa: E402
 from map_io import load_text_map  # noqa: E402
 
 
@@ -29,7 +29,7 @@ def main() -> None:
     args = parser.parse_args()
 
     grid, start, goal = load_text_map(args.map)
-    attributes = CellAttributeMap.load(args.attributes, len(grid[0]), len(grid))
+    attributes = load_cell_attributes(args.attributes, len(grid[0]), len(grid))
     display = [[1 if cell < 0 or cell >= 50 else 0 for cell in row] for row in grid]
     figure, axes = plt.subplots(1, 4, figsize=(16, 4))
     axes[0].imshow(display, cmap=ListedColormap(["white", "black"]))

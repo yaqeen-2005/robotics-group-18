@@ -6,3 +6,4 @@
 - `navigation`: A* pathfinding, Nav2, and obstacle avoidance (Yi and Sirui)
 - `pallet_transport`: Pallet pickup, transport, and release control (Yaqeen)
 - `robot_bringup`: Launch files, shared configuration, and system integration (Sirui)
+- `camera`: Webots camera input and human detection (Yi)

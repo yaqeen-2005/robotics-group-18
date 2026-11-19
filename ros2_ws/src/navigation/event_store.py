@@ -22,6 +22,19 @@ EVENT_TYPES = {CELL_VISITED, HUMAN_DETECTED, PATH_BLOCKED, REROUTE, BACKTRACK}
 DEFAULT_EVENT_DATABASE = Path(__file__).parent / "tests" / "events.db"
 
 
+def point(x: float, y: float) -> dict:
+    return {"kind": "point", "x": float(x), "y": float(y)}
+
+
+def line_segment(start: tuple[float, float], end: tuple[float, float]) -> dict:
+    """Represent one straight visited segment, normally recorded at a turn."""
+    return {
+        "kind": "line_segment",
+        "start": [float(start[0]), float(start[1])],
+        "end": [float(end[0]), float(end[1])],
+    }
+
+
 class EventStore:
     def __init__(self, database: str | Path = DEFAULT_EVENT_DATABASE):
         self.database = Path(database)
@@ -43,19 +56,6 @@ class EventStore:
                     )
                     """
                 )
-
-    @staticmethod
-    def point(x: float, y: float) -> dict:
-        return {"kind": "point", "x": float(x), "y": float(y)}
-
-    @staticmethod
-    def line_segment(start: tuple[float, float], end: tuple[float, float]) -> dict:
-        """Represent one straight visited segment, normally recorded at a turn."""
-        return {
-            "kind": "line_segment",
-            "start": [float(start[0]), float(start[1])],
-            "end": [float(end[0]), float(end[1])],
-        }
 
     def record_event(
         self,
@@ -118,7 +118,7 @@ class EventStore:
             robot_id,
             run_id,
             map_id,
-            self.line_segment(start, end),
+            line_segment(start, end),
             task_id=task_id,
         )
 

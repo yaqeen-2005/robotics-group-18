@@ -19,46 +19,6 @@ class CellAttributeMap:
         self.height = height
         self.values = values
 
-    @classmethod
-    def load(
-        cls, path: str | Path, expected_width: int, expected_height: int
-    ) -> "CellAttributeMap":
-        lines = [
-            line.strip()
-            for line in Path(path).read_text().splitlines()
-            if line.strip()
-        ]
-        try:
-            kind, version, width_text, height_text, dimensions_text = lines[0].split()
-            width, height, dimensions = (
-                int(width_text),
-                int(height_text),
-                int(dimensions_text),
-            )
-        except (IndexError, ValueError) as error:
-            raise ValueError(
-                "attribute header must be: ATTRIBUTES v1 <width> <height> 3"
-            ) from error
-
-        if kind != "ATTRIBUTES" or version != "v1" or dimensions != 3:
-            raise ValueError("only ATTRIBUTES v1 with 3 dimensions is supported")
-        if (width, height) != (expected_width, expected_height):
-            raise ValueError("attribute dimensions do not match map dimensions")
-
-        try:
-            flat = [float(value) for line in lines[1:] for value in line.split()]
-        except ValueError as error:
-            raise ValueError("attributes must contain only numbers") from error
-        expected_count = width * height * dimensions
-        if len(flat) != expected_count:
-            raise ValueError(f"attribute data must contain exactly {expected_count} values")
-        if any(not 0.0 <= value <= 1.0 for value in flat):
-            raise ValueError("attribute values must be between 0.0 and 1.0")
-
-        cells = [flat[offset : offset + dimensions] for offset in range(0, len(flat), dimensions)]
-        values = [cells[offset : offset + width] for offset in range(0, len(cells), width)]
-        return cls(width, height, values)
-
     def update_cell(self, x: int, y: int, dimension: int, value: float) -> None:
         """Replace one attribute value at (x, y)."""
         if not (0 <= x < self.width and 0 <= y < self.height):
@@ -74,3 +34,44 @@ class CellAttributeMap:
         if not 0 <= dimension < len(ATTRIBUTE_NAMES):
             raise IndexError("attribute dimension must be 0, 1, or 2")
         return [[cell[dimension] for cell in row] for row in self.values]
+
+
+def load_cell_attributes(
+    path: str | Path, expected_width: int, expected_height: int
+) -> CellAttributeMap:
+    lines = [
+        line.strip() for line in Path(path).read_text().splitlines() if line.strip()
+    ]
+    try:
+        kind, version, width_text, height_text, dimensions_text = lines[0].split()
+        width = int(width_text)
+        height = int(height_text)
+        dimensions = int(dimensions_text)
+    except (IndexError, ValueError) as error:
+        raise ValueError(
+            "attribute header must be: ATTRIBUTES v1 <width> <height> 3"
+        ) from error
+
+    if kind != "ATTRIBUTES" or version != "v1" or dimensions != 3:
+        raise ValueError("only ATTRIBUTES v1 with 3 dimensions is supported")
+    if (width, height) != (expected_width, expected_height):
+        raise ValueError("attribute dimensions do not match map dimensions")
+
+    try:
+        flat = [float(value) for line in lines[1:] for value in line.split()]
+    except ValueError as error:
+        raise ValueError("attributes must contain only numbers") from error
+    expected_count = width * height * dimensions
+    if len(flat) != expected_count:
+        raise ValueError(f"attribute data must contain exactly {expected_count} values")
+    if any(not 0.0 <= value <= 1.0 for value in flat):
+        raise ValueError("attribute values must be between 0.0 and 1.0")
+
+    cells = [
+        flat[offset : offset + dimensions]
+        for offset in range(0, len(flat), dimensions)
+    ]
+    values = [
+        cells[offset : offset + width] for offset in range(0, len(cells), width)
+    ]
+    return CellAttributeMap(width, height, values)
