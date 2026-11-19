@@ -40,6 +40,7 @@ This file records the features implemented by each group member. It can be used 
 - Added a lightweight YOLO26n camera component that returns person bounding boxes and confidence scores while keeping Webots and navigation integration separate.
 - Added basic frontier exploration that falls back from an unreachable A* goal to the nearest reachable unknown or low-confidence map boundary.
 - Added risk-aware A* costs for historical blockage, human presence, map uncertainty, and encounters with other robots, with replaceable weights for future ML tuning.
+- Added reproducible factory-map templates with synthetic human and robot trajectories for future path-weight experiments.
 
 ### Usage
 
