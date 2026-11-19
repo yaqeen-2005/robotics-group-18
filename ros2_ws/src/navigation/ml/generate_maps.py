@@ -24,22 +24,42 @@ TRAJECTORY_COUNTS = {"low": 2, "high": 8}
 def make_layout(width: int, height: int, layout: str, rng: random.Random):
     grid = [[0 for _ in range(width)] for _ in range(height)]
     if layout == "open":
-        for y in range(1, height - 1):
-            for x in range(1, width - 1):
-                if rng.random() < 0.05:
+        area_count = rng.randint(4, 8)
+        for _ in range(area_count):
+            area_width = rng.randint(2, max(2, width // 5))
+            area_height = rng.randint(2, max(2, height // 4))
+            left = rng.randint(2, width - area_width - 2)
+            top = rng.randint(2, height - area_height - 2)
+            for y in range(top, top + area_height):
+                for x in range(left, left + area_width):
                     grid[y][x] = 100
     elif layout == "aisles":
-        crossing_rows = {1, height // 2, height - 2}
-        for x in range(3, width - 2, 4):
-            for y in range(1, height - 1):
-                if y not in crossing_rows:
-                    grid[y][x] = 100
+        spacing = rng.randint(3, 5)
+        if rng.choice(("vertical", "horizontal")) == "vertical":
+            crossing_rows = {1, rng.randint(3, height - 4), height - 2}
+            for x in range(rng.randint(2, 4), width - 2, spacing):
+                for y in range(1, height - 1):
+                    if y not in crossing_rows:
+                        grid[y][x] = 100
+        else:
+            crossing_columns = {1, rng.randint(3, width - 4), width - 2}
+            for y in range(rng.randint(2, 4), height - 2, spacing):
+                for x in range(1, width - 1):
+                    if x not in crossing_columns:
+                        grid[y][x] = 100
     elif layout == "bottleneck":
-        wall_x = width // 2
-        opening_y = height // 2
-        for y in range(height):
-            if y != opening_y:
-                grid[y][wall_x] = 100
+        if rng.choice(("vertical", "horizontal")) == "vertical":
+            wall_x = rng.randint(width // 3, width * 2 // 3)
+            opening_y = rng.randint(2, height - 3)
+            for y in range(height):
+                if y != opening_y:
+                    grid[y][wall_x] = 100
+        else:
+            wall_y = rng.randint(height // 3, height * 2 // 3)
+            opening_x = rng.randint(2, width - 3)
+            for x in range(width):
+                if x != opening_x:
+                    grid[wall_y][x] = 100
     else:
         raise ValueError(f"unknown layout: {layout}")
 
@@ -82,15 +102,18 @@ def make_trajectories(grid, count: int, rng: random.Random):
         for x, value in enumerate(row)
         if value == 0
     ]
-    trajectories = []
+    base_trajectories = []
+    route_count = 1 if count <= 2 else 3
     attempts = 0
-    while len(trajectories) < count and attempts < count * 20:
+    while len(base_trajectories) < route_count and attempts < route_count * 20:
         attempts += 1
         start, goal = rng.sample(free_cells, 2)
         path = shortest_path(grid, start, goal)
         if len(path) >= 3:
-            trajectories.append(path)
-    return trajectories
+            base_trajectories.append(path)
+    if not base_trajectories:
+        return []
+    return [base_trajectories[index % len(base_trajectories)] for index in range(count)]
 
 
 def probability_layer(width, height, trajectories):

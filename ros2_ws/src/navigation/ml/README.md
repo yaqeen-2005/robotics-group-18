@@ -19,3 +19,9 @@ Each template directory contains:
 - `metadata.json`: layout factors plus the generated human and robot trajectories
 
 The initial templates vary layout, map size, human traffic, robot traffic, and map quality. A linear weight model is intentionally not implemented yet because it needs a labelled route score, such as delivery time plus penalties for collisions, human proximity, blockage, and rerouting.
+
+Compare generated `large_open_busy` samples:
+
+```bash
+python -m ml.show_samples
+```
