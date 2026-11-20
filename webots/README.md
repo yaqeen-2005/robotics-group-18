@@ -8,6 +8,21 @@ The additional **integration_test.wbt** world is described in
 load profiles, team interfaces and validation. The original warehouse below
 remains the small component test world.
 
+## Record SLAM sensor inputs
+
+For SLAM input recording, set `G18_SLAM_SENSOR_LOG` to an absolute path to
+a new JSONL file before launching Webots from that PowerShell session. Choose
+a file under `webots/results/slam/` to keep local captures out of Git.
+Open the compact warehouse, press Play, click the 3D view, and use W, A/D,
+then Space for a short straight, turn, and stop capture. Pause when finished.
+
+The first line describes the LiDAR geometry relative to the robot origin,
+wheel geometry, and sampling period. Each later line contains simulation
+time in seconds, left and right encoder angles in radians, and one array of
+LiDAR ranges in metres in Webots' native order. A JSON null denotes a
+non-finite sensor reading, including out-of-range returns. Restart Webots
+with a fresh output path for a new recording.
+
 ## Open on Windows
 
 1. Start your installed Webots from its existing shortcut. The supplied

@@ -1,6 +1,7 @@
 """Manual bring-up only. No ROS, autonomous navigation, or ground-truth access."""
 import math
 from controller import Robot, Keyboard
+from sensor_log import open_sensor_log
 
 robot = Robot()
 step_ms = int(robot.getBasicTimeStep())
@@ -26,6 +27,7 @@ for stage in lift_stages:
 
 RADIUS = 0.15
 TRACK = 0.82
+sensor_log = open_sensor_log(robot, step_ms, RADIUS, TRACK)
 lift_target = 0.0
 previous = None
 stopped_for = 0.0
@@ -41,6 +43,8 @@ print('Manual prototype: no attachment, obstacle stop or autonomous controller i
 while robot.step(step_ms) != -1:
     now = robot.getTime()
     angles = [s.getValue() for s in encoders]
+    if sensor_log is not None:
+        sensor_log.record(now, angles)
     valid = all(math.isfinite(x) for x in angles)
     wheel_speed = float('inf')
     if valid and previous is not None:
