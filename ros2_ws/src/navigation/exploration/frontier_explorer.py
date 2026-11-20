@@ -2,6 +2,7 @@
 
 from astar.a_star import plan_path
 from common.cell_attributes import CONFIDENCE, CellAttributeMap
+from exploration.frontier import find_frontiers
 
 
 class FrontierExplorer:
@@ -83,27 +84,10 @@ class FrontierExplorer:
         return False
 
     def _frontier_candidates(self) -> list[tuple[int, int]]:
-        candidates = []
-        height = len(self.grid)
-        width = len(self.grid[0])
-        for y, row in enumerate(self.grid):
-            for x, cell in enumerate(row):
-                if not 0 <= cell < 50 or (x, y) == self.position:
-                    continue
-                confidence = self.attributes.values[y][x][CONFIDENCE]
-                neighbours = ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1))
-                next_to_uncertain = False
-                for nx, ny in neighbours:
-                    if 0 <= nx < width and 0 <= ny < height and (
-                        self.grid[ny][nx] == -1
-                        or self.attributes.values[ny][nx][CONFIDENCE]
-                        < self.confidence_threshold
-                    ):
-                        next_to_uncertain = True
-                        break
-                if confidence < self.confidence_threshold or next_to_uncertain:
-                    candidates.append((x, y))
-        return candidates
+        candidates = find_frontiers(
+            self.grid, self.attributes, self.confidence_threshold
+        )
+        return [point for point in candidates if point != self.position]
 
     def _distance_from_position(self, point: tuple[int, int]) -> int:
         return abs(point[0] - self.position[0]) + abs(point[1] - self.position[1])
