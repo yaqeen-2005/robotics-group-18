@@ -1,0 +1,73 @@
+<?xml version="1.0"?>
+<!--
+  ROS description of webots/protos/PalletRobot.proto (Thomas's model; not modified).
+  Frames follow REP-103: x forward, y left, z up. base_link sits on the drive axle,
+  as in the PROTO; base_footprint is the ground projection (wheel radius 0.15 m).
+  Joint names must equal the Webots motor device names for webots_ros2_control.
+-->
+<robot name="group18_pallet_robot">
+  <webots>
+    <device reference="front_lidar" type="Lidar">
+      <ros>
+        <enabled>true</enabled>
+        <updateRate>10</updateRate>
+        <topicName>/scan_raw</topicName>
+        <alwaysOn>true</alwaysOn>
+        <frameName>front_lidar</frameName>
+      </ros>
+    </device>
+
+    <plugin type="webots_ros2_control::Ros2Control" />
+
+    <!-- Warehouse radio (channels 18/19) and raw lift passthrough. -->
+    <plugin type="robot_bringup.warehouse_bridge.WarehouseBridge" />
+  </webots>
+
+  <link name="base_link" />
+
+  <link name="base_footprint" />
+  <joint name="base_footprint_joint" type="fixed">
+    <parent link="base_link" />
+    <child link="base_footprint" />
+    <origin xyz="0 0 -0.15" rpy="0 0 0" />
+  </joint>
+
+  <link name="left_wheel" />
+  <joint name="left_wheel_motor" type="continuous">
+    <parent link="base_link" />
+    <child link="left_wheel" />
+    <origin xyz="0 0.41 0" rpy="0 0 0" />
+    <axis xyz="0 1 0" />
+  </joint>
+
+  <link name="right_wheel" />
+  <joint name="right_wheel_motor" type="continuous">
+    <parent link="base_link" />
+    <child link="right_wheel" />
+    <origin xyz="0 -0.41 0" rpy="0 0 0" />
+    <axis xyz="0 1 0" />
+  </joint>
+
+  <link name="front_lidar" />
+  <joint name="front_lidar_joint" type="fixed">
+    <parent link="base_link" />
+    <child link="front_lidar" />
+    <origin xyz="0.52 0 0.13" rpy="0 0 0" />
+  </joint>
+
+  <ros2_control name="WebotsControl" type="system">
+    <hardware>
+      <plugin>webots_ros2_control::Ros2ControlSystem</plugin>
+    </hardware>
+    <joint name="left_wheel_motor">
+      <state_interface name="position" />
+      <state_interface name="velocity" />
+      <command_interface name="velocity" />
+    </joint>
+    <joint name="right_wheel_motor">
+      <state_interface name="position" />
+      <state_interface name="velocity" />
+      <command_interface name="velocity" />
+    </joint>
+  </ros2_control>
+</robot>
