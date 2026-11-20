@@ -1,0 +1,48 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 50
+
+    diffdrive_controller:
+      type: diff_drive_controller/DiffDriveController
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+diffdrive_controller:
+  ros__parameters:
+    left_wheel_names: ["left_wheel_motor"]
+    right_wheel_names: ["right_wheel_motor"]
+
+    # From webots/protos/PalletRobot.proto: wheel anchors at y = +/-0.41 m, radius 0.15 m.
+    wheel_separation: 0.82
+    wheel_radius: 0.15
+    # The two support castors scrub sideways when turning, so the robot turns
+    # ~11.5% less than 0.82 m predicts (measured against Webots ground truth,
+    # in-place turns at 0.3 and 0.6 rad/s). Straight driving is exact.
+    wheel_separation_multiplier: 1.115
+
+    base_frame_id: base_link
+    odom_frame_id: odom
+    enable_odom_tf: true
+    publish_rate: 50.0
+    # Stop the wheels if no command arrives (e.g. teleop or Nav2 dies).
+    cmd_vel_timeout: 0.5
+
+    # Wheel motors are limited to 8 rad/s (1.2 m/s). Keep a safety margin;
+    # cargo-dependent limits are applied upstream (Nav2 / motion control).
+    linear:
+      x:
+        has_velocity_limits: true
+        max_velocity: 1.0
+        min_velocity: -0.5
+        has_acceleration_limits: true
+        max_acceleration: 0.8
+        min_acceleration: -1.2
+    angular:
+      z:
+        has_velocity_limits: true
+        max_velocity: 1.2
+        min_velocity: -1.2
+        has_acceleration_limits: true
+        max_acceleration: 2.0
+        min_acceleration: -2.0
