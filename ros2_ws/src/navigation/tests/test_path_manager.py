@@ -66,6 +66,23 @@ class PathManagerTest(unittest.TestCase):
         self.assertEqual(result["action"], "WAIT")
         self.assertEqual(result["path"], [(0, 0), (1, 0), (2, 0)])
 
+    def test_human_cell_is_blocked_during_reroute(self):
+        manager = PathManager()
+        grid = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
+        manager.plan(grid, (0, 1), (2, 1))
+
+        result = manager.plan(
+            grid,
+            (0, 1),
+            (2, 1),
+            human_blocking=True,
+            human_distance=1.0,
+            waiting_time=10.0,
+            human_cells={(1, 0)},
+        )
+
+        self.assertNotIn((1, 0), result["path"])
+
 
 if __name__ == "__main__":
     unittest.main()

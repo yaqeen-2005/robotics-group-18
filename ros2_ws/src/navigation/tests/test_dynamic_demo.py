@@ -14,6 +14,25 @@ class DynamicDemoTest(unittest.TestCase):
         for task in demo["tasks"]:
             final = [frame for frame in demo["frames"] if frame["task_id"] == task["task_id"]][-1]
             self.assertEqual(final["robot"], final["goal"])
+        self.assertTrue(
+            all(frame["robot"] not in frame["humans"] for frame in demo["frames"])
+        )
+        for previous, current in zip(demo["frames"], demo["frames"][1:]):
+            if previous["task_id"] != current["task_id"]:
+                continue
+            for old_human, new_human in zip(previous["humans"], current["humans"]):
+                self.assertFalse(
+                    previous["robot"] == new_human
+                    and current["robot"] == old_human,
+                    "robot and person must not pass through each other",
+                )
+        self.assertTrue(
+            all(
+                frame["human_distance"] <= frame["attention_distance"]
+                for frame in demo["frames"]
+                if frame["action"] == "WAIT"
+            )
+        )
         self.assertTrue(demo["report"])
 
 

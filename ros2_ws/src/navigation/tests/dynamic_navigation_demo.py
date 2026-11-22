@@ -19,7 +19,8 @@ LEFT_STATIONS = [(2, 4), (2, 8), (2, 12)]
 RIGHT_STATIONS = [(21, 4), (21, 8), (21, 12)]
 DEFAULT_SEED = 18
 DEFAULT_TASKS = 3
-MAX_TICKS_PER_TASK = 45
+MAX_TICKS_PER_TASK = 80
+DEFAULT_HUMAN_ATTENTION_DISTANCE = 6
 
 
 def make_demo_map():
@@ -81,7 +82,37 @@ def background_people(tick):
     return [(2, left_y), (21, right_y)]
 
 
-def run_demo(seed=DEFAULT_SEED, task_count=DEFAULT_TASKS):
+def keep_people_out_of_robot(planned_people, previous_people, robot, grid):
+    """Make simulated pedestrians yield instead of entering the robot cell."""
+    safe_people = []
+    for index, planned in enumerate(planned_people):
+        if planned != robot:
+            safe_people.append(planned)
+            continue
+        previous = previous_people[index] if previous_people else planned
+        if previous != robot:
+            safe_people.append(previous)
+            continue
+        x, y = planned
+        alternatives = ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1))
+        safe_people.append(
+            next(
+                point
+                for point in alternatives
+                if 0 <= point[0] < WIDTH
+                and 0 <= point[1] < HEIGHT
+                and grid[point[1]][point[0]] == 0
+                and point != robot
+            )
+        )
+    return safe_people
+
+
+def run_demo(
+    seed=DEFAULT_SEED,
+    task_count=DEFAULT_TASKS,
+    attention_distance=DEFAULT_HUMAN_ATTENTION_DISTANCE,
+):
     grid = make_demo_map()
     attributes = make_attributes()
     tasks = make_tasks(seed, task_count)
@@ -97,13 +128,29 @@ def run_demo(seed=DEFAULT_SEED, task_count=DEFAULT_TASKS):
             initial_path = plan_path(grid, robot, goal, attributes)
             person_route = blocking_route(initial_path)
             waiting_time = 0.0
+            previous_people = []
+            manager.plan(grid, robot, goal, attributes)
 
             for task_tick in range(MAX_TICKS_PER_TASK):
                 blocker = person_route[min(task_tick, len(person_route) - 1)]
-                people = [blocker, *background_people(global_tick)]
+                planned_people = [blocker, *background_people(global_tick)]
+                people = keep_people_out_of_robot(
+                    planned_people, previous_people, robot, grid
+                )
+                previous_people = people
                 remaining = manager._remaining_path(robot)
-                human_blocking = blocker in remaining
-                distance = abs(robot[0] - blocker[0]) + abs(robot[1] - blocker[1])
+                people_on_path = []
+                for index, person in enumerate(people):
+                    if person in remaining[1:]:
+                        distance = abs(robot[0] - person[0]) + abs(robot[1] - person[1])
+                        people_on_path.append((distance, index, person))
+                nearest = min(people_on_path, default=None)
+                human_blocking = (
+                    nearest is not None and nearest[0] <= attention_distance
+                )
+                distance = nearest[0] if nearest is not None else attention_distance + 1
+                nearest_index = nearest[1] if nearest is not None else None
+                nearest_position = nearest[2] if nearest is not None else None
                 event_id = None
                 human_flag = False
                 if human_blocking:
@@ -111,7 +158,7 @@ def run_demo(seed=DEFAULT_SEED, task_count=DEFAULT_TASKS):
                         "demo-robot",
                         "demo-run",
                         "demo-map",
-                        blocker,
+                        nearest_position,
                         distance=distance,
                         task_id=f"task-{task['task_id']}",
                     )
@@ -129,6 +176,7 @@ def run_demo(seed=DEFAULT_SEED, task_count=DEFAULT_TASKS):
                     human_blocking=human_blocking,
                     human_distance=distance,
                     waiting_time=waiting_time,
+                    human_cells={nearest_position} if human_blocking else None,
                 )
                 if event_id is not None:
                     store.annotate_event(
@@ -150,7 +198,10 @@ def run_demo(seed=DEFAULT_SEED, task_count=DEFAULT_TASKS):
                         "goal": goal,
                         "robot": robot,
                         "humans": people,
-                        "blocking_human": 0 if human_blocking else None,
+                        "nearest_human": nearest_index,
+                        "human_distance": distance if nearest is not None else None,
+                        "attention_distance": attention_distance,
+                        "blocking_human": nearest_index if human_blocking else None,
                         "path": path,
                         "action": result["action"],
                         "human_detected": human_flag,
@@ -218,6 +269,18 @@ def show_demo(demo, save_gif=None):
         goal = frame["goal"]
         robot_marker.set_offsets([robot])
         human_markers.set_offsets(humans)
+        human_markers.set_facecolors(
+            [
+                "darkred" if index == frame["blocking_human"] else "red"
+                for index in range(len(humans))
+            ]
+        )
+        human_markers.set_edgecolors(
+            [
+                "gold" if index == frame["nearest_human"] else "white"
+                for index in range(len(humans))
+            ]
+        )
         start_marker.set_offsets([start])
         goal_marker.set_offsets([goal])
         robot_label.set_position((robot[0], robot[1] - 0.65))
@@ -240,9 +303,15 @@ def show_demo(demo, save_gif=None):
 
         score = frame["reroute_score"]
         score_text = "inactive" if score is None else f"{score:.2f} / 0.60"
+        distance = frame["human_distance"]
+        person_text = (
+            "none on path"
+            if distance is None
+            else f"{distance} cells (react <= {frame['attention_distance']})"
+        )
         axis.set_title(
             f"Task {frame['task_id']}/{frame['task_count']} | step {frame['task_tick'] + 1} | "
-            f"{frame['action']} | reroute score: {score_text}",
+            f"{frame['action']}\nNearest path person: {person_text} | reroute score: {score_text}",
             color="darkred" if waiting else "black",
             weight="bold",
         )
@@ -270,10 +339,16 @@ def main():
     parser.add_argument("--output", help="optional JSON trace output")
     parser.add_argument("--seed", type=int, default=DEFAULT_SEED)
     parser.add_argument("--tasks", type=int, default=DEFAULT_TASKS)
+    parser.add_argument(
+        "--attention-distance",
+        type=int,
+        default=DEFAULT_HUMAN_ATTENTION_DISTANCE,
+        help="only react to the nearest person on the path within this many cells",
+    )
     parser.add_argument("--show", action="store_true", help="open a Matplotlib animation")
     parser.add_argument("--save-gif", help="save the Matplotlib animation as a GIF")
     args = parser.parse_args()
-    demo = run_demo(args.seed, args.tasks)
+    demo = run_demo(args.seed, args.tasks, args.attention_distance)
     text = json.dumps(demo, indent=2)
     if args.output:
         output = Path(args.output)

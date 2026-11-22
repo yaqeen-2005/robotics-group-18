@@ -68,6 +68,7 @@ class PathManager:
         human_blocking=False,
         human_distance=0.0,
         waiting_time=0.0,
+        human_cells=None,
     ):
         """Generate an A* path every call, then decide whether to adopt it."""
         generated = plan_path(
@@ -97,6 +98,10 @@ class PathManager:
 
             old_path = remaining or self.current_path
             avoided = set(old_path[1:-1])
+            occupied_by_people = set(human_cells or [])
+            occupied_by_people.discard(start)
+            if goal in occupied_by_people:
+                return self._result("WAIT", old_path, score)
             alternative = plan_path(
                 grid,
                 start,
@@ -104,7 +109,7 @@ class PathManager:
                 attributes,
                 weights,
                 start_direction,
-                blocked_cells=avoided,
+                blocked_cells=avoided | occupied_by_people,
             )
             if alternative and alternative != old_path:
                 self._replace_path(alternative, old_path)

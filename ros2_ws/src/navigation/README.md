@@ -18,7 +18,7 @@ Run the deterministic dynamic demonstration from this directory:
 python -m tests.dynamic_navigation_demo --show --tasks 3 --seed 18
 ```
 
-The Matplotlib window shows a 24 x 16 warehouse with black walls and racks, randomized pickup A and delivery B locations, a blue robot, three red people, and the current route. During a human wait the robot becomes a larger orange square and the window displays `WAITING FOR PERSON`. Save the same animation with `--save-gif .runtime/dynamic_navigation.gif`.
+The Matplotlib window shows a 24 x 16 warehouse with black walls and racks, randomized pickup A and delivery B locations, a blue robot, three red people, and the current route. The planner considers only the nearest person on the remaining route and ignores that person while farther than the default six-cell attention distance. The gold-outlined person is the nearest one on the route; a dark-red person is close enough to affect planning. Change the future trainable threshold with `--attention-distance 4`. During a human wait the robot becomes a larger orange square and the window displays `WAITING FOR PERSON`. Save the same animation with `--save-gif .runtime/dynamic_navigation.gif`.
 
 The scenario assumes SLAM supplies a correct pose. A person moves onto the initial route, the robot waits while the linear score is below its threshold, then reroutes through the second passage and reaches the goal. The script uses the real `EventStore`, attribute updater, `PathManager`, and A* components; it does not simulate sensors or wheel motion.
 
