@@ -48,7 +48,7 @@ This file records the features implemented by each group member. It can be used 
 - Connected new SQLite navigation events to the four-dimensional attribute map with per-consumer processing records, preventing an event from changing the same map twice.
 - Added a sensor-facing human-event interface, a `human_detected` batch flag, and a report of map cells where detections caused waiting or rerouting.
 - Added editable JSON A* weight profiles, a compressed 40 by 30 busy-factory training dataset, and a reproducible standard-library trainer for balanced and human-safety objectives.
-- Added a deterministic dynamic demonstration in which a moving person blocks the planned route, generates database events, causes waiting, triggers a reroute, and produces a human-activity report before the robot reaches its goal.
+- Added a seeded dynamic demonstration with randomized pickup and delivery points and three moving people. Human blockages generate database events, visibly stop the robot, trigger rerouting, and produce a human-activity report across multiple completed tasks.
 
 ### Usage
 

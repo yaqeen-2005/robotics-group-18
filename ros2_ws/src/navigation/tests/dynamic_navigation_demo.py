@@ -1,10 +1,12 @@
-"""Run a deterministic SLAM-to-navigation demo with a moving human."""
+"""Run deterministic random A-to-B tasks with moving people."""
 
 import argparse
 import json
+import random
 import tempfile
 from pathlib import Path
 
+from astar.a_star import plan_path
 from common.cell_attributes import CellAttributeMap
 from common.event_attributes import apply_new_events
 from common.event_store import EventStore
@@ -13,13 +15,11 @@ from common.path_manager import PathManager
 
 WIDTH = 24
 HEIGHT = 16
-START = (2, 8)
-GOAL = (21, 8)
-HUMAN_ROUTE = (
-    [(17, 5), (16, 5), (15, 5), (14, 5), (13, 5), (12, 5)]
-    + [(12, 5)] * 8
-    + [(13, 5), (14, 5), (15, 5), (16, 5)]
-)
+LEFT_STATIONS = [(2, 4), (2, 8), (2, 12)]
+RIGHT_STATIONS = [(21, 4), (21, 8), (21, 12)]
+DEFAULT_SEED = 18
+DEFAULT_TASKS = 3
+MAX_TICKS_PER_TASK = 45
 
 
 def make_demo_map():
@@ -49,77 +49,125 @@ def make_attributes():
     return CellAttributeMap(WIDTH, HEIGHT, values)
 
 
-def run_demo(max_ticks=45):
+def make_tasks(seed=DEFAULT_SEED, count=DEFAULT_TASKS):
+    if not 1 <= count <= len(LEFT_STATIONS):
+        raise ValueError(f"task count must be between 1 and {len(LEFT_STATIONS)}")
+    rng = random.Random(seed)
+    left = rng.sample(LEFT_STATIONS, count)
+    right = rng.sample(RIGHT_STATIONS, count)
+    tasks = []
+    for index in range(count):
+        start, goal = (left[index], right[index])
+        if index % 2:
+            start, goal = goal, start
+        tasks.append({"task_id": index + 1, "start": start, "goal": goal})
+    return tasks
+
+
+def blocking_route(path):
+    crossing_index = next(
+        index for index, point in enumerate(path) if point[0] == 12
+    )
+    crossing = path[crossing_index]
+    approach = list(reversed(path[crossing_index + 1 : crossing_index + 5]))
+    if not approach:
+        approach = list(path[max(0, crossing_index - 4) : crossing_index])
+    return approach + [crossing] * 9
+
+
+def background_people(tick):
+    left_y = 2 + tick % 12
+    right_y = 13 - tick % 12
+    return [(2, left_y), (21, right_y)]
+
+
+def run_demo(seed=DEFAULT_SEED, task_count=DEFAULT_TASKS):
     grid = make_demo_map()
     attributes = make_attributes()
-    manager = PathManager()
-    robot = START
-    waiting_time = 0.0
+    tasks = make_tasks(seed, task_count)
     frames = []
+    global_tick = 0
 
     with tempfile.TemporaryDirectory() as directory:
         store = EventStore(Path(directory) / "events.db")
-        for tick in range(max_ticks):
-            human = HUMAN_ROUTE[min(tick, len(HUMAN_ROUTE) - 1)]
-            remaining = manager._remaining_path(robot)
-            human_blocking = human in remaining
-            distance = abs(robot[0] - human[0]) + abs(robot[1] - human[1])
-            event_id = None
-            human_flag = False
-            if human_blocking:
-                event_id = store.record_human_detection(
-                    "demo-robot",
-                    "demo-run",
-                    "demo-map",
-                    human,
-                    distance=distance,
-                )
-                update = apply_new_events(store, attributes, "demo-map")
-                human_flag = update["human_detected"]
-                waiting_time += 1.0
-            else:
-                waiting_time = 0.0
+        for task in tasks:
+            manager = PathManager()
+            robot = task["start"]
+            goal = task["goal"]
+            initial_path = plan_path(grid, robot, goal, attributes)
+            person_route = blocking_route(initial_path)
+            waiting_time = 0.0
 
-            result = manager.plan(
-                grid,
-                robot,
-                GOAL,
-                attributes,
-                human_blocking=human_blocking,
-                human_distance=distance,
-                waiting_time=waiting_time,
-            )
-            if event_id is not None:
-                store.annotate_event(
-                    event_id,
-                    decision=result["action"],
-                    reroute_score=result["reroute_score"],
-                )
+            for task_tick in range(MAX_TICKS_PER_TASK):
+                blocker = person_route[min(task_tick, len(person_route) - 1)]
+                people = [blocker, *background_people(global_tick)]
+                remaining = manager._remaining_path(robot)
+                human_blocking = blocker in remaining
+                distance = abs(robot[0] - blocker[0]) + abs(robot[1] - blocker[1])
+                event_id = None
+                human_flag = False
+                if human_blocking:
+                    event_id = store.record_human_detection(
+                        "demo-robot",
+                        "demo-run",
+                        "demo-map",
+                        blocker,
+                        distance=distance,
+                        task_id=f"task-{task['task_id']}",
+                    )
+                    update = apply_new_events(store, attributes, "demo-map")
+                    human_flag = update["human_detected"]
+                    waiting_time += 1.0
+                else:
+                    waiting_time = 0.0
 
-            path = result["path"]
-            if result["action"] in {"MOVE", "REROUTE"} and len(path) > 1:
-                robot = tuple(path[1])
-            frames.append(
-                {
-                    "tick": tick,
-                    "robot": robot,
-                    "human": human,
-                    "path": path,
-                    "action": result["action"],
-                    "human_detected": human_flag,
-                    "reroute_score": result["reroute_score"],
-                    "reroute_count": result["reroute_count"],
-                }
-            )
-            if robot == GOAL:
-                break
+                result = manager.plan(
+                    grid,
+                    robot,
+                    goal,
+                    attributes,
+                    human_blocking=human_blocking,
+                    human_distance=distance,
+                    waiting_time=waiting_time,
+                )
+                if event_id is not None:
+                    store.annotate_event(
+                        event_id,
+                        decision=result["action"],
+                        reroute_score=result["reroute_score"],
+                    )
+
+                path = result["path"]
+                if result["action"] in {"MOVE", "REROUTE"} and len(path) > 1:
+                    robot = tuple(path[1])
+                frames.append(
+                    {
+                        "tick": global_tick,
+                        "task_tick": task_tick,
+                        "task_id": task["task_id"],
+                        "task_count": len(tasks),
+                        "start": task["start"],
+                        "goal": goal,
+                        "robot": robot,
+                        "humans": people,
+                        "blocking_human": 0 if human_blocking else None,
+                        "path": path,
+                        "action": result["action"],
+                        "human_detected": human_flag,
+                        "reroute_score": result["reroute_score"],
+                        "reroute_count": result["reroute_count"],
+                    }
+                )
+                global_tick += 1
+                if robot == goal:
+                    break
 
         report = build_human_activity_report(store.read_events(), "demo-map")
-    return {"grid": grid, "start": START, "goal": GOAL, "frames": frames, "report": report}
+    return {"grid": grid, "tasks": tasks, "frames": frames, "report": report}
 
 
 def show_demo(demo, save_gif=None):
-    """Animate the real demo trace with Matplotlib."""
+    """Animate real A* decisions with obvious waiting feedback."""
     import matplotlib.pyplot as plt
     from matplotlib.animation import FuncAnimation, PillowWriter
     from matplotlib.colors import ListedColormap
@@ -138,18 +186,25 @@ def show_demo(demo, save_gif=None):
     axis.set_xlabel("Grid x")
     axis.set_ylabel("Grid y")
 
-    start = demo["start"]
-    goal = demo["goal"]
-    axis.scatter(*start, s=380, marker="*", color="orange", edgecolor="black", zorder=6)
-    axis.scatter(*goal, s=380, marker="*", color="limegreen", edgecolor="black", zorder=6)
-    axis.text(start[0], start[1] + 1.0, "A PICKUP", ha="center", weight="bold")
-    axis.text(goal[0], goal[1] + 1.0, "B DELIVERY", ha="center", weight="bold")
-
     route_line, = axis.plot([], [], color="dodgerblue", linewidth=4, marker=".", zorder=3)
-    robot_marker = axis.scatter([], [], s=330, marker="s", color="royalblue", edgecolor="yellow", linewidth=2.5, zorder=7, label="Robot")
-    human_marker = axis.scatter([], [], s=280, marker="o", color="red", edgecolor="white", linewidth=2, zorder=7, label="Person")
+    robot_marker = axis.scatter([], [], s=360, marker="s", color="royalblue", edgecolor="yellow", linewidth=2.5, zorder=7, label="Robot")
+    human_markers = axis.scatter([], [], s=230, marker="o", color="red", edgecolor="white", linewidth=2, zorder=7, label="People")
+    start_marker = axis.scatter([], [], s=380, marker="*", color="orange", edgecolor="black", zorder=6)
+    goal_marker = axis.scatter([], [], s=380, marker="*", color="limegreen", edgecolor="black", zorder=6)
     robot_label = axis.text(0, 0, "ROBOT", ha="center", weight="bold", zorder=8)
-    human_label = axis.text(0, 0, "PERSON", ha="center", weight="bold", zorder=8)
+    start_label = axis.text(0, 0, "A PICKUP", ha="center", weight="bold", zorder=8)
+    goal_label = axis.text(0, 0, "B DELIVERY", ha="center", weight="bold", zorder=8)
+    wait_banner = axis.text(
+        WIDTH / 2,
+        1,
+        "",
+        ha="center",
+        va="center",
+        fontsize=18,
+        weight="bold",
+        color="black",
+        zorder=10,
+    )
     axis.legend(loc="upper center", bbox_to_anchor=(0.5, 1.13), ncol=2)
 
     def update(index):
@@ -158,26 +213,46 @@ def show_demo(demo, save_gif=None):
         route_line.set_data([point[0] for point in path], [point[1] for point in path])
         route_line.set_color("limegreen" if frame["reroute_count"] else "dodgerblue")
         robot = frame["robot"]
-        human = frame["human"]
+        humans = frame["humans"]
+        start = frame["start"]
+        goal = frame["goal"]
         robot_marker.set_offsets([robot])
-        human_marker.set_offsets([human])
+        human_markers.set_offsets(humans)
+        start_marker.set_offsets([start])
+        goal_marker.set_offsets([goal])
         robot_label.set_position((robot[0], robot[1] - 0.65))
-        human_label.set_position((human[0], human[1] - 0.65))
+        start_label.set_position((start[0], start[1] + 1.0))
+        goal_label.set_position((goal[0], goal[1] + 1.0))
+
+        waiting = frame["action"] == "WAIT"
+        rerouting = frame["action"] == "REROUTE"
+        robot_marker.set_facecolor("orange" if waiting else "royalblue")
+        robot_marker.set_sizes([520 if waiting else 360])
+        if waiting:
+            wait_banner.set_text("WAITING FOR PERSON")
+            wait_banner.set_bbox({"facecolor": "gold", "edgecolor": "darkred", "pad": 8})
+        elif rerouting:
+            wait_banner.set_text("REROUTING AROUND PERSON")
+            wait_banner.set_bbox({"facecolor": "limegreen", "edgecolor": "black", "pad": 8})
+        else:
+            wait_banner.set_text("")
+            wait_banner.set_bbox(None)
+
         score = frame["reroute_score"]
         score_text = "inactive" if score is None else f"{score:.2f} / 0.60"
         axis.set_title(
-            f"Step {index + 1}/{len(frames)} | {frame['action']} | "
-            f"reroute score: {score_text} | reroutes: {frame['reroute_count']}",
-            color="darkred" if frame["action"] == "WAIT" else "black",
+            f"Task {frame['task_id']}/{frame['task_count']} | step {frame['task_tick'] + 1} | "
+            f"{frame['action']} | reroute score: {score_text}",
+            color="darkred" if waiting else "black",
             weight="bold",
         )
-        return route_line, robot_marker, human_marker, robot_label, human_label
+        return route_line, robot_marker, human_markers, wait_banner
 
     animation = FuncAnimation(
         figure,
         update,
         frames=len(frames),
-        interval=550,
+        interval=500,
         repeat=False,
         blit=False,
     )
@@ -191,13 +266,14 @@ def show_demo(demo, save_gif=None):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Run the dynamic navigation demo")
+    parser = argparse.ArgumentParser(description="Run random dynamic navigation tasks")
     parser.add_argument("--output", help="optional JSON trace output")
-    parser.add_argument("--ticks", type=int, default=45)
+    parser.add_argument("--seed", type=int, default=DEFAULT_SEED)
+    parser.add_argument("--tasks", type=int, default=DEFAULT_TASKS)
     parser.add_argument("--show", action="store_true", help="open a Matplotlib animation")
     parser.add_argument("--save-gif", help="save the Matplotlib animation as a GIF")
     args = parser.parse_args()
-    demo = run_demo(args.ticks)
+    demo = run_demo(args.seed, args.tasks)
     text = json.dumps(demo, indent=2)
     if args.output:
         output = Path(args.output)
