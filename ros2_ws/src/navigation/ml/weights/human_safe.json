@@ -1,0 +1,27 @@
+{
+  "name": "human_safe",
+  "weights": {
+    "distance": 0.6955,
+    "blockage": 3.0007,
+    "human": 10.5706,
+    "uncertainty": 0.5168,
+    "robot_encounter": 3.285,
+    "turn": 1.8089,
+    "heuristic": 1.0
+  },
+  "training": {
+    "archive": "factory_busy_v1.zip",
+    "seed": 18,
+    "trials": 40,
+    "tasks": 120,
+    "objective": {
+      "distance": 1.0,
+      "blockage": 4.0,
+      "human": 14.0,
+      "uncertainty": 3.0,
+      "robot_encounter": 4.0,
+      "turn": 0.75
+    },
+    "score": 90.1563
+  }
+}

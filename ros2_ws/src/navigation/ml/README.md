@@ -1,27 +1,17 @@
-# Map generation for weight experiments
+# Map generation and A* weight experiments
 
-Generate all initial map templates from the `navigation` directory:
+Generate all reproducible map templates:
 
 ```bash
 python -m ml.generate_maps
 ```
 
-Generate one reproducible template with a selected seed:
+Generate only the larger 40 x 30 busy factory map:
 
 ```bash
-python -m ml.generate_maps --template large_aisles_human_busy --seed 12
+python -m ml.generate_maps --template training_factory_busy --seed 18
 ```
 
-Each template directory contains:
+Each map contains `map.txt`, `attributes.txt`, and `metadata.json`. The four attributes are confidence, historical blockage probability, human presence probability, and other-robot encounter probability.
 
-- `map.txt`: obstacles, start, and goal in `MAP v1` format
-- `attributes.txt`: confidence, blockage, human, and robot probabilities in `ATTRIBUTES v2` format
-- `metadata.json`: layout factors plus the generated human and robot trajectories
-
-The initial templates vary layout, map size, human traffic, robot traffic, and map quality. A linear weight model is intentionally not implemented yet because it needs a labelled route score, such as delivery time plus penalties for collisions, human proximity, blockage, and rerouting.
-
-Compare generated `large_open_busy` samples:
-
-```bash
-python -m ml.show_samples
-```
+The prepared training archive and editable profiles are described in [TRAINING.md](TRAINING.md). The current profiles are deliberately selected by the caller; automatic profile selection after a run is future work.

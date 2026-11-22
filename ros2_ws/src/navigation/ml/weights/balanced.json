@@ -1,0 +1,27 @@
+{
+  "name": "balanced",
+  "weights": {
+    "distance": 1.0,
+    "blockage": 4.0,
+    "human": 6.0,
+    "uncertainty": 3.0,
+    "robot_encounter": 4.0,
+    "turn": 0.5,
+    "heuristic": 1.0
+  },
+  "training": {
+    "archive": "factory_busy_v1.zip",
+    "seed": 18,
+    "trials": 40,
+    "tasks": 120,
+    "objective": {
+      "distance": 1.0,
+      "blockage": 4.0,
+      "human": 6.0,
+      "uncertainty": 3.0,
+      "robot_encounter": 4.0,
+      "turn": 0.5
+    },
+    "score": 77.5771
+  }
+}

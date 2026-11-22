@@ -2,23 +2,31 @@
 
 from astar.a_star import plan_path
 
+DEFAULT_HUMAN_DECISION_WEIGHTS = {
+    "bias": 0.0,
+    "distance": 0.2,
+    "waiting_time": 0.8,
+    "reroute_count": -0.4,
+}
+DEFAULT_REROUTE_THRESHOLD = 0.6
+DEFAULT_NORMALISATION_LIMITS = {
+    "human_distance": 10.0,
+    "waiting_time": 10.0,
+    "reroute_count": 5,
+}
+
 
 class PathManager:
     def __init__(
         self,
-        reroute_threshold=0.6,
+        reroute_threshold=DEFAULT_REROUTE_THRESHOLD,
         decision_weights=None,
-        max_human_distance=10.0,
-        max_waiting_time=10.0,
-        max_reroutes=5,
+        max_human_distance=DEFAULT_NORMALISATION_LIMITS["human_distance"],
+        max_waiting_time=DEFAULT_NORMALISATION_LIMITS["waiting_time"],
+        max_reroutes=DEFAULT_NORMALISATION_LIMITS["reroute_count"],
     ):
         self.reroute_threshold = reroute_threshold
-        self.decision_weights = {
-            "bias": 0.0,
-            "distance": 0.2,
-            "waiting_time": 0.8,
-            "reroute_count": -0.4,
-        }
+        self.decision_weights = DEFAULT_HUMAN_DECISION_WEIGHTS.copy()
         if decision_weights is not None:
             unknown = set(decision_weights) - set(self.decision_weights)
             if unknown:

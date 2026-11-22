@@ -24,13 +24,19 @@ Pass a different map to the planner:
 python -m astar.run my_map.txt
 ```
 
+Load the matching attributes and an editable trained profile during local testing:
+
+```bash
+python -m astar.run tests/maps/demo_map.txt --attributes tests/maps/demo_attributes.txt --weights ml/weights/human_safe.json --no-visual
+```
+
 The map header is `MAP v1 <width> <height>`. All map cells are flattened onto the next line in row-major order. Map symbols are `S` (start), `G` (goal), `.` (free), `#` (obstacle), and `?` (unknown/blocked).
 
 The separate attribute file uses `ATTRIBUTES v2 <width> <height> 4`. Each cell stores confidence, historical blockage probability, human encounter probability, and other-robot encounter probability. All values are between `0.0` and `1.0`.
 
 The A* cost combines distance and all four risk attributes. Default weights are defined at the top of `astar/a_star.py`; callers may pass a replacement weight dictionary produced by a future training process.
 
-Display the map and all three attribute layers:
+Display the map and all four attribute layers:
 
 ```bash
 python tests/show_map.py tests/maps/demo_map.txt tests/maps/demo_attributes.txt
@@ -66,3 +72,43 @@ events.record_visited_segment("robot-1", "run-1", "map-1", (1, 2), (5, 2))
 ```
 
 The default development database is `tests/events.db`.
+
+The sensor side may record a person without knowing the navigation decision:
+
+```python
+event_id = events.record_human_detection(
+    "robot-1", "run-1", "map-1", (4, 7), distance=2.1
+)
+```
+
+After `PathManager` returns, the future runtime loop can attach the decision without creating a duplicate detection:
+
+```python
+events.annotate_event(event_id, decision="WAIT", reroute_score=0.42)
+```
+
+Apply every new database event to the attribute map exactly once:
+
+```python
+from common.event_attributes import apply_new_events
+
+result = apply_new_events(events, attributes, "map-1")
+if result["human_detected"]:
+    print("A new human event was received")
+```
+
+The caller saves the modified attribute map after the batch. No robot control loop is included in this component.
+
+The same batch operation is available from the command line:
+
+```bash
+python -m common.event_attributes tests/events.db tests/maps/demo_map.txt tests/maps/demo_attributes.txt map-1 --output updated_attributes.txt
+```
+
+Its JSON output includes `human_detected`, which is true when the processed batch contains a new `HUMAN_DETECTED` event.
+
+Produce a JSON report of cells where people are frequently detected and cause waiting or rerouting:
+
+```bash
+python -m common.human_activity_report tests/events.db --map-id map-1 --output human_activity.json
+```

@@ -45,6 +45,9 @@ This file records the features implemented by each group member. It can be used 
 - Added a configurable A* turn penalty so later training can prefer routes with fewer direction changes, while keeping the public path format unchanged.
 - Added next-heading and relative-turn outputs for handing grid routes to a downstream motion controller.
 - Added route-state management that regenerates A* candidates on every update, immediately adopts routes after non-human map changes, and handles human obstructions through a configurable linear wait/reroute decision.
+- Connected new SQLite navigation events to the four-dimensional attribute map with per-consumer processing records, preventing an event from changing the same map twice.
+- Added a sensor-facing human-event interface, a `human_detected` batch flag, and a report of map cells where detections caused waiting or rerouting.
+- Added editable JSON A* weight profiles, a compressed 40 by 30 busy-factory training dataset, and a reproducible standard-library trainer for balanced and human-safety objectives.
 
 ### Usage
 
