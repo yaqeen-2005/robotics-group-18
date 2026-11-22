@@ -81,3 +81,21 @@ def load_cell_attributes(
         cells[offset : offset + width] for offset in range(0, len(cells), width)
     ]
     return CellAttributeMap(width, height, values)
+
+
+def save_cell_attributes(path: str | Path, attributes: CellAttributeMap) -> None:
+    """Save attributes using the existing flattened ATTRIBUTES v2 format."""
+    flat = []
+    if len(attributes.values) != attributes.height:
+        raise ValueError("attribute height does not match its values")
+    for row in attributes.values:
+        if len(row) != attributes.width:
+            raise ValueError("attribute width does not match its values")
+        for cell in row:
+            if len(cell) != len(ATTRIBUTE_NAMES):
+                raise ValueError("every cell must contain four attributes")
+            if any(not 0.0 <= value <= 1.0 for value in cell):
+                raise ValueError("attribute values must be between 0.0 and 1.0")
+            flat.extend(f"{value:g}" for value in cell)
+    header = f"ATTRIBUTES v2 {attributes.width} {attributes.height} 4"
+    Path(path).write_text(f"{header}\n{' '.join(flat)}\n")

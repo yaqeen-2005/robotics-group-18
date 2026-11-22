@@ -44,3 +44,35 @@ def load_text_map(path: str | Path) -> tuple[list[list[int]], GridPoint, GridPoi
     if start is None or goal is None:
         raise ValueError("map must contain exactly one S and one G")
     return grid, start, goal
+
+
+def save_text_map(
+    path: str | Path,
+    grid: list[list[int]],
+    start: GridPoint,
+    goal: GridPoint,
+) -> None:
+    """Save a grid using the existing flattened MAP v1 format."""
+    if not grid or not grid[0] or any(len(row) != len(grid[0]) for row in grid):
+        raise ValueError("grid must be a non-empty rectangle")
+    width, height = len(grid[0]), len(grid)
+    for name, (x, y) in (("start", start), ("goal", goal)):
+        if not (0 <= x < width and 0 <= y < height):
+            raise ValueError(f"{name} must be inside the grid")
+
+    symbols = []
+    for y, row in enumerate(grid):
+        for x, cell in enumerate(row):
+            if (x, y) == start:
+                symbols.append("S")
+            elif (x, y) == goal:
+                symbols.append("G")
+            elif cell == -1:
+                symbols.append("?")
+            elif 0 <= cell < 50:
+                symbols.append(".")
+            elif 50 <= cell <= 100:
+                symbols.append("#")
+            else:
+                raise ValueError(f"unsupported map value {cell} at ({x}, {y})")
+    Path(path).write_text(f"MAP v1 {width} {height}\n{''.join(symbols)}\n")

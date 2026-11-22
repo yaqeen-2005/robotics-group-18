@@ -1,5 +1,7 @@
 """Choose simple reachable frontier targets for unknown-map exploration."""
 
+import math
+
 from astar.a_star import plan_path
 from common.cell_attributes import CONFIDENCE, CellAttributeMap
 from exploration.frontier import find_frontiers
@@ -13,6 +15,7 @@ class FrontierExplorer:
         self.attributes = None
         self.position = None
         self.position_confidence = None
+        self.yaw = None
 
     def set_step_size(self, step_size: int) -> None:
         if step_size < 1:
@@ -35,12 +38,16 @@ class FrontierExplorer:
         self.attributes = attributes
 
     def update_position(
-        self, position: tuple[int, int], confidence: float = 1.0
+        self,
+        position: tuple[int, int],
+        confidence: float = 1.0,
+        yaw: float | None = None,
     ) -> None:
         if not 0.0 <= confidence <= 1.0:
             raise ValueError("position confidence must be between 0.0 and 1.0")
         self.position = position
         self.position_confidence = confidence
+        self.yaw = yaw
 
     def next_move(self, goal: tuple[int, int] | None = None) -> dict | None:
         """Move toward a goal, or explore uncertain map cells if A* cannot reach it."""
@@ -69,9 +76,17 @@ class FrontierExplorer:
 
     def _move_from_path(self, path: list[tuple[int, int]], mode: str) -> dict:
         target = path[min(self.step_size, len(path) - 1)]
+        next_x = path[1][0] - path[0][0]
+        next_y = path[1][1] - path[0][1]
+        heading = math.atan2(next_y, next_x)
+        turn = None
+        if self.yaw is not None:
+            turn = (heading - self.yaw + math.pi) % (2 * math.pi) - math.pi
         return {
             "delta": (target[0] - self.position[0], target[1] - self.position[1]),
             "target": target,
+            "heading_rad": heading,
+            "turn_rad": turn,
             "mode": mode,
         }
 

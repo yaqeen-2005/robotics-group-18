@@ -41,6 +41,10 @@ This file records the features implemented by each group member. It can be used 
 - Added basic frontier exploration that falls back from an unreachable A* goal to the nearest reachable unknown or low-confidence map boundary.
 - Added risk-aware A* costs for historical blockage, human presence, map uncertainty, and encounters with other robots, with replaceable weights for future ML tuning.
 - Added reproducible factory-map templates with synthetic human and robot trajectories for future path-weight experiments.
+- Added a separate obstacle-inflation tool that accepts a clearance radius in grid cells and writes matching processed map and attribute files.
+- Added a configurable A* turn penalty so later training can prefer routes with fewer direction changes, while keeping the public path format unchanged.
+- Added next-heading and relative-turn outputs for handing grid routes to a downstream motion controller.
+- Added route-state management that regenerates A* candidates on every update, immediately adopts routes after non-human map changes, and handles human obstructions through a configurable linear wait/reroute decision.
 
 ### Usage
 

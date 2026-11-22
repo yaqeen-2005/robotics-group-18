@@ -1,0 +1,71 @@
+import unittest
+
+from common.path_manager import PathManager
+
+
+class PathManagerTest(unittest.TestCase):
+    def test_non_human_map_change_adopts_new_path_immediately(self):
+        manager = PathManager()
+        clear = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
+        manager.plan(clear, (0, 1), (2, 1))
+
+        changed = [[0, 0, 0], [0, 100, 0], [0, 0, 0]]
+        result = manager.plan(changed, (0, 1), (2, 1), map_changed=True)
+
+        self.assertEqual(result["action"], "REROUTE")
+        self.assertNotIn((1, 1), result["path"])
+
+    def test_human_obstacle_waits_below_threshold(self):
+        manager = PathManager()
+        grid = [[0, 0, 0]]
+        manager.plan(grid, (0, 0), (2, 0))
+
+        result = manager.plan(
+            grid,
+            (0, 0),
+            (2, 0),
+            human_blocking=True,
+            human_distance=1.0,
+            waiting_time=1.0,
+        )
+
+        self.assertEqual(result["action"], "WAIT")
+
+    def test_human_obstacle_reroutes_away_from_old_path(self):
+        manager = PathManager()
+        grid = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
+        manager.plan(grid, (0, 1), (2, 1))
+
+        result = manager.plan(
+            grid,
+            (0, 1),
+            (2, 1),
+            human_blocking=True,
+            human_distance=10.0,
+            waiting_time=10.0,
+        )
+
+        self.assertEqual(result["action"], "REROUTE")
+        self.assertNotIn((1, 1), result["path"])
+        self.assertEqual(len(manager.previous_paths), 1)
+
+    def test_human_obstacle_keeps_waiting_when_no_alternative_exists(self):
+        manager = PathManager()
+        grid = [[0, 0, 0]]
+        manager.plan(grid, (0, 0), (2, 0))
+
+        result = manager.plan(
+            grid,
+            (0, 0),
+            (2, 0),
+            human_blocking=True,
+            human_distance=10.0,
+            waiting_time=10.0,
+        )
+
+        self.assertEqual(result["action"], "WAIT")
+        self.assertEqual(result["path"], [(0, 0), (1, 0), (2, 0)])
+
+
+if __name__ == "__main__":
+    unittest.main()
