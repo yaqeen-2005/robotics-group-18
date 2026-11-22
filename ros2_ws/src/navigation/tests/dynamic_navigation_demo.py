@@ -118,10 +118,84 @@ def run_demo(max_ticks=45):
     return {"grid": grid, "start": START, "goal": GOAL, "frames": frames, "report": report}
 
 
+def show_demo(demo, save_gif=None):
+    """Animate the real demo trace with Matplotlib."""
+    import matplotlib.pyplot as plt
+    from matplotlib.animation import FuncAnimation, PillowWriter
+    from matplotlib.colors import ListedColormap
+
+    grid = demo["grid"]
+    frames = demo["frames"]
+    display = [[1 if cell >= 50 or cell < 0 else 0 for cell in row] for row in grid]
+    figure, axis = plt.subplots(figsize=(13, 8))
+    axis.imshow(display, cmap=ListedColormap(["white", "black"]), vmin=0, vmax=1)
+    axis.set_xticks(range(0, WIDTH, 2))
+    axis.set_yticks(range(0, HEIGHT, 2))
+    axis.set_xticks([value - 0.5 for value in range(WIDTH + 1)], minor=True)
+    axis.set_yticks([value - 0.5 for value in range(HEIGHT + 1)], minor=True)
+    axis.grid(which="minor", color="lightgray", linewidth=0.5)
+    axis.tick_params(which="minor", bottom=False, left=False)
+    axis.set_xlabel("Grid x")
+    axis.set_ylabel("Grid y")
+
+    start = demo["start"]
+    goal = demo["goal"]
+    axis.scatter(*start, s=380, marker="*", color="orange", edgecolor="black", zorder=6)
+    axis.scatter(*goal, s=380, marker="*", color="limegreen", edgecolor="black", zorder=6)
+    axis.text(start[0], start[1] + 1.0, "A PICKUP", ha="center", weight="bold")
+    axis.text(goal[0], goal[1] + 1.0, "B DELIVERY", ha="center", weight="bold")
+
+    route_line, = axis.plot([], [], color="dodgerblue", linewidth=4, marker=".", zorder=3)
+    robot_marker = axis.scatter([], [], s=330, marker="s", color="royalblue", edgecolor="yellow", linewidth=2.5, zorder=7, label="Robot")
+    human_marker = axis.scatter([], [], s=280, marker="o", color="red", edgecolor="white", linewidth=2, zorder=7, label="Person")
+    robot_label = axis.text(0, 0, "ROBOT", ha="center", weight="bold", zorder=8)
+    human_label = axis.text(0, 0, "PERSON", ha="center", weight="bold", zorder=8)
+    axis.legend(loc="upper center", bbox_to_anchor=(0.5, 1.13), ncol=2)
+
+    def update(index):
+        frame = frames[index]
+        path = frame["path"]
+        route_line.set_data([point[0] for point in path], [point[1] for point in path])
+        route_line.set_color("limegreen" if frame["reroute_count"] else "dodgerblue")
+        robot = frame["robot"]
+        human = frame["human"]
+        robot_marker.set_offsets([robot])
+        human_marker.set_offsets([human])
+        robot_label.set_position((robot[0], robot[1] - 0.65))
+        human_label.set_position((human[0], human[1] - 0.65))
+        score = frame["reroute_score"]
+        score_text = "inactive" if score is None else f"{score:.2f} / 0.60"
+        axis.set_title(
+            f"Step {index + 1}/{len(frames)} | {frame['action']} | "
+            f"reroute score: {score_text} | reroutes: {frame['reroute_count']}",
+            color="darkred" if frame["action"] == "WAIT" else "black",
+            weight="bold",
+        )
+        return route_line, robot_marker, human_marker, robot_label, human_label
+
+    animation = FuncAnimation(
+        figure,
+        update,
+        frames=len(frames),
+        interval=550,
+        repeat=False,
+        blit=False,
+    )
+    update(0)
+    figure.tight_layout()
+    if save_gif:
+        animation.save(save_gif, writer=PillowWriter(fps=2))
+    else:
+        plt.show()
+    return animation
+
+
 def main():
     parser = argparse.ArgumentParser(description="Run the dynamic navigation demo")
     parser.add_argument("--output", help="optional JSON trace output")
     parser.add_argument("--ticks", type=int, default=45)
+    parser.add_argument("--show", action="store_true", help="open a Matplotlib animation")
+    parser.add_argument("--save-gif", help="save the Matplotlib animation as a GIF")
     args = parser.parse_args()
     demo = run_demo(args.ticks)
     text = json.dumps(demo, indent=2)
@@ -129,7 +203,9 @@ def main():
         output = Path(args.output)
         output.parent.mkdir(parents=True, exist_ok=True)
         output.write_text(text + "\n")
-    else:
+    if args.show or args.save_gif:
+        show_demo(demo, args.save_gif)
+    elif not args.output:
         print(text)
 
 

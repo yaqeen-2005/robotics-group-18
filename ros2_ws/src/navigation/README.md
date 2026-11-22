@@ -15,8 +15,10 @@ The source is organised into:
 Run the deterministic dynamic demonstration from this directory:
 
 ```bash
-python -m tests.dynamic_navigation_demo --output .runtime/dynamic_demo_trace.json
+python -m tests.dynamic_navigation_demo --show
 ```
+
+The Matplotlib window shows a 24 x 16 warehouse with black walls and racks, pickup A, delivery B, a blue robot, a red person, and the current route. Save the same animation with `--save-gif .runtime/dynamic_navigation.gif`.
 
 The scenario assumes SLAM supplies a correct pose. A person moves onto the initial route, the robot waits while the linear score is below its threshold, then reroutes through the second passage and reaches the goal. The script uses the real `EventStore`, attribute updater, `PathManager`, and A* components; it does not simulate sensors or wheel motion.
 
