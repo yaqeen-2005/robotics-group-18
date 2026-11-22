@@ -12,6 +12,14 @@ The source is organised into:
 - `exploration`: future exploration of an unknown map
 - `common`: shared map, cell-attribute, and event data for navigation and ML
 
+Run the deterministic dynamic demonstration from this directory:
+
+```bash
+python -m tests.dynamic_navigation_demo --output .runtime/dynamic_demo_trace.json
+```
+
+The scenario assumes SLAM supplies a correct pose. A person moves onto the initial route, the robot waits while the linear score is below its threshold, then reroutes through the second passage and reaches the goal. The script uses the real `EventStore`, attribute updater, `PathManager`, and A* components; it does not simulate sensors or wheel motion.
+
 Print the path without a plot:
 
 ```bash
