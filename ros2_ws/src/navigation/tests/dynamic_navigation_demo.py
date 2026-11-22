@@ -11,14 +11,14 @@ from common.event_store import EventStore
 from common.human_activity_report import build_human_activity_report
 from common.path_manager import PathManager
 
-WIDTH = 18
-HEIGHT = 12
-START = (2, 5)
-GOAL = (15, 5)
+WIDTH = 24
+HEIGHT = 16
+START = (2, 8)
+GOAL = (21, 8)
 HUMAN_ROUTE = (
-    [(11, 3), (10, 3), (9, 3), (8, 3)]
-    + [(8, 3)] * 8
-    + [(9, 3), (10, 3), (11, 3), (12, 3)]
+    [(17, 5), (16, 5), (15, 5), (14, 5), (13, 5), (12, 5)]
+    + [(12, 5)] * 8
+    + [(13, 5), (14, 5), (15, 5), (16, 5)]
 )
 
 
@@ -31,8 +31,13 @@ def make_demo_map():
         grid[y][0] = 100
         grid[y][WIDTH - 1] = 100
     for y in range(1, HEIGHT - 1):
-        if y not in (3, 8):
-            grid[y][8] = 100
+        if y not in (5, 12):
+            grid[y][12] = 100
+    for left, right in ((4, 9), (15, 20)):
+        for top in (2, 6, 10):
+            for y in range(top, top + 2):
+                for x in range(left, right + 1):
+                    grid[y][x] = 100
     return grid
 
 
@@ -44,7 +49,7 @@ def make_attributes():
     return CellAttributeMap(WIDTH, HEIGHT, values)
 
 
-def run_demo(max_ticks=30):
+def run_demo(max_ticks=45):
     grid = make_demo_map()
     attributes = make_attributes()
     manager = PathManager()
@@ -116,7 +121,7 @@ def run_demo(max_ticks=30):
 def main():
     parser = argparse.ArgumentParser(description="Run the dynamic navigation demo")
     parser.add_argument("--output", help="optional JSON trace output")
-    parser.add_argument("--ticks", type=int, default=30)
+    parser.add_argument("--ticks", type=int, default=45)
     args = parser.parse_args()
     demo = run_demo(args.ticks)
     text = json.dumps(demo, indent=2)
