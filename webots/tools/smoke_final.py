@@ -14,11 +14,16 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--webots',default=shutil.which('webots') or r'C:\Program Files\Webots\msys64\mingw64\bin\webots.exe')
     parser.add_argument('--capture',action='store_true'); parser.add_argument('--timeout',type=int,default=210)
+    parser.add_argument('--localization', action='store_true', help='Record a paired P03 to D01 localization trial.')
     args=parser.parse_args()
     if not Path(args.webots).is_file(): parser.error('Pass --webots with the executable path.')
     dest=ROOT.parent/'.runtime'/('final-smoke-'+datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S_%fZ'))
     for folder in ('protos','config','controllers/final_warehouse','textures/final_hall'):
         shutil.copytree(ROOT/folder,dest/folder,ignore=shutil.ignore_patterns('__pycache__'))
+    if args.localization:
+        for module in ('odometry.py', 'live_pose.py'):
+            (dest/'localization').mkdir(exist_ok=True)
+            shutil.copyfile(ROOT/'localization'/module, dest/'localization'/module)
     (dest/'worlds').mkdir(); (dest/'tools').mkdir(); probe=dest/'controllers/final_robot_probe'; probe.mkdir()
     shutil.copyfile(ROOT/'tools/build_integration_world.py',dest/'tools/build_integration_world.py')
     shutil.copyfile(ROOT/'tests/final_robot_probe.py',probe/'final_robot_probe.py')
@@ -31,6 +36,7 @@ def main():
     demo_seed=json.loads((ROOT/'config/final_warehouse.json').read_text())['demo_seed']
     env=dict(os.environ,G18_WAREHOUSE_SEED=str(demo_seed)); options=[] if args.capture else ['--no-rendering']
     if args.capture: env['G18_CAPTURE']='1'
+    if args.localization: env['G18_LOCALIZATION_TRIAL']='1'
     print('Isolated Webots run:',dest,flush=True)
     with (dest/'webots.log').open('w',encoding='utf-8') as log:
         result=subprocess.run([args.webots,'--batch','--minimize','--mode=fast','--stdout','--stderr','--port=1283',*options,str(world)],
@@ -38,6 +44,11 @@ def main():
     result_file=dest/'probe.json'
     if not result_file.exists(): raise RuntimeError('Controllers did not finish. Inspect '+str(dest/'webots.log'))
     report=json.loads(result_file.read_text()); print(f"Robot: {report['reason']}; {report['packets']} status packets, {report['berth_checks']} physical berth checks. Full result: {result_file}")
+    if args.localization:
+        if result.returncode != 0 or not report['passed']:
+            raise RuntimeError(f'Localization trial failed; see {dest}')
+        print(f'Paired poses: {dest / "paired.csv"}')
+        return
     event_file=next((dest/'results/final').glob('*/events.jsonl')); events=[json.loads(row) for row in event_file.read_text().splitlines()]
     assert result.returncode==0 and report['passed'],dest
     assert {r['id'] for r in events if r['event']=='stock_withdraw'}=={'FLT_N','FLT_S'},'Both stock shuttles must deliver.'

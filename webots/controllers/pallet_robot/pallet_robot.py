@@ -1,5 +1,8 @@
 """Manual bring-up only. No ROS, autonomous navigation, or ground-truth access."""
 import math
+import os
+from pathlib import Path
+import sys
 from controller import Robot, Keyboard
 from sensor_log import open_sensor_log
 
@@ -28,6 +31,12 @@ for stage in lift_stages:
 RADIUS = 0.15
 TRACK = 0.82
 sensor_log = open_sensor_log(robot, step_ms, RADIUS, TRACK)
+pose_publisher = None
+if os.environ.get("G18_LOCALIZATION_POSE"):
+    sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+    from webots.localization.live_pose import open_pose_publisher
+
+    pose_publisher = open_pose_publisher(RADIUS, TRACK)
 lift_target = 0.0
 previous = None
 stopped_for = 0.0
@@ -43,6 +52,8 @@ print('Manual prototype: no attachment, obstacle stop or autonomous controller i
 while robot.step(step_ms) != -1:
     now = robot.getTime()
     angles = [s.getValue() for s in encoders]
+    if pose_publisher is not None:
+        pose_publisher.update(now, angles)
     if sensor_log is not None:
         sensor_log.record(now, angles)
     valid = all(math.isfinite(x) for x in angles)

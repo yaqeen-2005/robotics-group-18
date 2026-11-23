@@ -1,5 +1,6 @@
 """Isolated simulator acceptance probe; uses world pose solely to steer a scripted QA trip."""
 import json
+import csv
 import math
 import os
 from pathlib import Path
@@ -46,6 +47,21 @@ def traction_trials(robot,step,body,motors,tx):
 def main():
     robot=Supervisor(); step=int(robot.getBasicTimeStep())*2; body=robot.getSelf()
     output=Path(__file__).resolve().parents[2]/'probe.json'
+    localization = os.environ.get('G18_LOCALIZATION_TRIAL') == '1'
+    if localization:
+        sys.path.insert(0, str(ROOT))
+        from localization.live_pose import PosePublisher, WarehouseLocalization
+
+        encoders = [robot.getDevice(side+'_wheel_sensor') for side in ('left', 'right')]
+        for encoder in encoders:
+            encoder.enable(step)
+        start = (-38, -3.3, -math.pi/2)
+        estimator = WarehouseLocalization(.15, .82, start)
+        publisher = PosePublisher(ROOT/'pose.json', WarehouseLocalization(.15, .82, start))
+        paired_file = (ROOT/'paired.csv').open('w', newline='', encoding='utf-8', buffering=1)
+        paired = csv.writer(paired_file)
+        paired.writerow(('time_s', 'phase', 'x_m', 'y_m', 'yaw_rad',
+                         'truth_x_m', 'truth_y_m', 'truth_yaw_rad'))
     rx=robot.getDevice('warehouse_events'); rx.enable(step); tx=robot.getDevice('warehouse_commands')
     lidar=robot.getDevice('front_lidar'); lidar.enable(step*8)
     lift=robot.getDevice('lift_motor'); lift.setVelocity(.25); lift.setPosition(0)
@@ -61,6 +77,8 @@ def main():
            ('drive',(-36.7,16),1),('drive',(-40,16),1),('lift',0,0),('drive',(-36.7,16),-1)]
 
     def finish(ok,reason):
+        if localization:
+            paired_file.close()
         output.write_text(json.dumps(dict(passed=ok,reason=reason,phase=phase,robot=pose,statuses=sorted(states),packets=readings,
             wrong_command_rejected=ack,lidar=seed_check,berth_checks=len(berth_checks),fades=fades,colour_match=painted,
             reports=[list(row) for row in sorted(reports)],samples=samples,traction=traction,floor_drops=staged),indent=2))
@@ -68,6 +86,16 @@ def main():
 
     while robot.step(step)!=-1:
         now=robot.getTime(); pos=body.getPosition(); ori=body.getOrientation(); yaw=math.atan2(ori[3],ori[0]); pose=[round(pos[0],2),round(pos[1],2),round(yaw,3)]
+        if localization:
+            angles = [encoder.getValue() for encoder in encoders]
+            estimate = estimator.update(now, angles)
+            publisher.update(now, angles)
+            if estimate is not None:
+                paired.writerow((now, phase, estimate['x_m'], estimate['y_m'],
+                                 estimate['yaw_rad'], pos[0], pos[1], yaw))
+            if phase == len(route) and 'delivered' in states:
+                finish(True, 'P03 to D01 complete')
+                return
         for spec in CFG['trucks']:
             ident=spec['id']
             if ident in staged:continue
@@ -147,7 +175,7 @@ def main():
                 phase+=1; since=now; speed=spin=0.; samples.append([round(now,2),phase,pose]); print('[QA] phase',phase,pose,flush=True)
         for index,stage in enumerate(stages,1): stage.setPosition(max(0.,sensor.getValue())*index/3)
         motors[0].setVelocity((speed-spin*.41)/.15); motors[1].setVelocity((speed+spin*.41)/.15)
-        if replenished and len(staged)==len(CFG['trucks']):
+        if not localization and replenished and len(staged)==len(CFG['trucks']):
             arrived=phase==len(route) and {'ready','in_transit','delivered'}<=states
             traction=traction_trials(robot,step,body,motors,tx)
             slip=traction['wet']['encoder_m']-traction['wet']['actual_m']
