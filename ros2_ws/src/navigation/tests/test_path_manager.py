@@ -1,6 +1,7 @@
 import unittest
 
 from common.path_manager import PathManager
+from common.inflate_map import inflate_map
 
 
 class PathManagerTest(unittest.TestCase):
@@ -82,6 +83,37 @@ class PathManagerTest(unittest.TestCase):
         )
 
         self.assertNotIn((1, 0), result["path"])
+
+    def test_human_and_door_trigger_one_route_around_both(self):
+        grid = [[0] * 7 for _ in range(7)]
+        manager = PathManager()
+        manager.plan(grid, (1, 3), (5, 3))
+        inflated, _ = inflate_map(grid, inflation_cells=1,
+                                  dynamic_obstacles={(3, 3)})
+        result = manager.plan(
+            inflated, (1, 3), (5, 3), human_blocking=True,
+            human_distance=2, waiting_time=10, human_cells={(3, 3)},
+            door_cells={(3, 2)}, door_belief=0.9,
+            door_block_rate=0.95,
+        )
+        self.assertEqual(result["action"], "REROUTE")
+        self.assertTrue(all(inflated[y][x] < 50 for x, y in result["path"]))
+        self.assertNotIn((3, 2), result["path"])
+        self.assertEqual(manager.reroute_count, 1)
+
+    def test_door_reroute_wins_while_human_waits(self):
+        grid = [[0] * 7 for _ in range(7)]
+        manager = PathManager()
+        manager.plan(grid, (1, 3), (5, 3))
+        result = manager.plan(
+            grid, (1, 3), (5, 3), human_blocking=True,
+            human_distance=2, waiting_time=1, human_cells={(2, 3)},
+            door_cells={(3, 3)}, door_belief=0.9,
+            door_block_rate=0.95,
+        )
+        self.assertEqual(result["action"], "REROUTE")
+        self.assertNotIn((2, 3), result["path"])
+        self.assertNotIn((3, 3), result["path"])
 
 
 if __name__ == "__main__":

@@ -16,8 +16,9 @@ def inflate_map(
     attributes=None,
     inflation_cells=1,
     protected_points=None,
+    dynamic_obstacles=None,
 ):
-    """Return copies with obstacle cells expanded by a circular cell radius."""
+    """Inflate walls and current dynamic obstacle cells in one map pass."""
     if not grid or not grid[0] or any(len(row) != len(grid[0]) for row in grid):
         raise ValueError("grid must be a non-empty rectangle")
     if not isinstance(inflation_cells, int) or inflation_cells < 0:
@@ -43,6 +44,11 @@ def inflate_map(
         for x, cell in enumerate(row)
         if 50 <= cell <= 100
     ]
+    for point in dynamic_obstacles or ():
+        x, y = point
+        if not (0 <= x < width and 0 <= y < height):
+            raise ValueError("dynamic obstacle is outside the grid")
+        obstacles.append((x, y))
     source_for_cell = {}
     radius_squared = inflation_cells * inflation_cells
     for obstacle_x, obstacle_y in obstacles:

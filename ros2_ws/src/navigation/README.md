@@ -66,11 +66,15 @@ python -m common.inflate_map tests/maps/demo_map.txt tests/maps/demo_attributes.
 
 The inflation component is separate from A*. Do not apply it again when the input is already an inflated Nav2 costmap. Expanded cells copy the nearest obstacle's attributes to keep the files aligned, although blocked-cell attributes do not affect A*.
 
+For a fresh, uninflated occupancy grid, include currently observed person cells in the same pass as walls: `inflate_map(grid, inflation_cells=1, dynamic_obstacles=person_cells, protected_points={robot_position})`. A radius of one cell is the default example safety margin; choose the actual radius from map resolution and robot clearance. Pass the resulting grid to `PathManager.plan()` along with `human_cells=person_cells`. Do not inflate an already inflated static map again. The output is temporary for that sensor update; the stored static map is unchanged.
+
 A* keeps the arrival direction internally and adds the configurable `turn` weight when a route changes direction. `FrontierExplorer.next_move()` also returns `heading_rad` and, when the current yaw is supplied to `update_position`, `turn_rad`. `common.path_smoothing.smooth_path(grid, path)` converts each safe right-angle bend into output segments at 30° and 60°; an unsafe bend stays unchanged. The planner and route manager retain their original grid path. The CLI and dynamic demo display use the smoothed output. Run smoothing against an inflated map when robot width matters; wheel control remains the controller's responsibility.
 
 `common.path_manager.PathManager` calls A* on every update but retains the active route unless a non-human map change is explicitly reported. A human obstruction is handled separately by a configurable linear score using human distance, waiting time, and reroute count. It returns `WAIT` below the threshold, or tries a route that avoids the remaining old path above the threshold.
 
 `common.special_obstacles.SpecialObstacles` registers the human and door-like rules. A door is considered only when its belief and proximity pass thresholds; its observed open rate determines whether waiting is reasonable. Both rules use the same rerouting branch. `PathManager.backtrack_counts` tracks actual returns to previously visited cells, while `repeat_counts` additionally penalises cells on abandoned routes; these are different measures. If the old route can be avoided, it is excluded; otherwise A* may reuse it with a penalty. The trained thresholds are only calibrated on synthetic examples. No controller loop or automatic live sensor ingestion is included here.
+
+When a person and a door are detected together, each rule votes independently. Any `REROUTE` vote produces one route decision using the union of all active special-obstacle cells (including obstacles whose rule voted `WAIT`). If neither votes to reroute but one votes `WAIT`, the robot waits. The processed occupancy grid also blocks the inflated person footprint.
 
 ## Event history
 

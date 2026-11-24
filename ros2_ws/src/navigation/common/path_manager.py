@@ -1,4 +1,4 @@
-"""Keep route state and handle human blocking separately from map changes."""
+"""Keep route state and combine special-obstacle rerouting decisions."""
 
 from astar.a_star import plan_path
 from common.special_obstacles import SpecialObstacles
@@ -129,25 +129,34 @@ class PathManager:
                 default=0,
             )
             score = self.human_reroute_score(human_distance, waiting_time)
-            kind = "human" if human_blocking else "door"
-            decision = self.special_obstacles.decide(
-                kind,
-                distance=human_distance if human_blocking else (obstacle_distance if obstacle_distance is not None else 0),
-                waiting_time=waiting_time,
-                belief=door_belief if door_belief is not None else 0,
-                block_rate=door_block_rate if door_block_rate is not None else 1,
-                human_reroute_score=score,
-                human_threshold=self.reroute_threshold,
-                backtracks=backtracks,
-            )
-            if decision == "IGNORE":
+            decisions = []
+            occupied = set()
+            if human_blocking:
+                human_decision = self.special_obstacles.decide(
+                    "human", distance=human_distance, waiting_time=waiting_time,
+                    human_reroute_score=score, human_threshold=self.reroute_threshold,
+                    backtracks=backtracks,
+                )
+                decisions.append(human_decision)
+                if human_decision != "IGNORE":
+                    occupied.update(human_cells or ())
+            if door_cells:
+                door_decision = self.special_obstacles.decide(
+                    "door", distance=obstacle_distance, waiting_time=waiting_time,
+                    belief=door_belief if door_belief is not None else 0,
+                    block_rate=door_block_rate if door_block_rate is not None else 1,
+                    backtracks=backtracks,
+                )
+                decisions.append(door_decision)
+                if door_decision != "IGNORE":
+                    occupied.update(door_cells)
+            if all(decision == "IGNORE" for decision in decisions):
                 return self._result("MOVE", remaining or generated, score)
-            if decision == "WAIT":
+            if "REROUTE" not in decisions:
                 return self._result("WAIT", remaining, score)
 
             old_path = remaining or self.current_path
             avoided = set(old_path[1:-1])
-            occupied = set(human_cells or []) | set(door_cells or [])
             occupied.discard(start)
             if goal in occupied:
                 return self._result("WAIT", old_path, score)

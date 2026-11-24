@@ -45,6 +45,15 @@ class MapInflationTest(unittest.TestCase):
         self.assertEqual((loaded, start, goal), (grid, (0, 0), (2, 1)))
         self.assertEqual(loaded_attributes.values, attributes.values)
 
+    def test_walls_and_people_are_inflated_together(self):
+        grid = [[0] * 7 for _ in range(7)]
+        grid[1][1] = 100
+        inflated, _ = inflate_map(grid, inflation_cells=1,
+                                  dynamic_obstacles={(3, 3)})
+        for point in ((1, 1), (0, 1), (2, 1), (3, 3), (2, 3), (4, 3), (3, 2), (3, 4)):
+            self.assertEqual(inflated[point[1]][point[0]], 100)
+        self.assertEqual(grid[3][3], 0)
+
 
 if __name__ == "__main__":
     unittest.main()
