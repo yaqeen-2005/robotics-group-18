@@ -34,6 +34,10 @@ class TemporalDoorTest(unittest.TestCase):
         rules = SpecialObstacles()
         self.assertEqual(rules.decide("door", distance=2, belief=0.9, block_rate=0.3), "WAIT")
         self.assertEqual(rules.decide("door", distance=2, belief=0.9, block_rate=0.95), "REROUTE")
+        self.assertEqual(rules.decide("human", distance=1, human_reroute_score=0.7,
+                                      backtracks=2), "WAIT")
+        self.assertEqual(rules.decide("door", distance=2, belief=0.9, block_rate=0.85,
+                                      backtracks=2), "WAIT")
 
     def test_door_cost_and_replanning_share_astar(self):
         grid = [[0] * 5 for _ in range(3)]

@@ -55,13 +55,28 @@ def train(seed=18, trials=400, output=OUTPUT):
                 regret_total += predicted - min(wait_cost, detour)
             scores.append((regret_total / trials, threshold, wait_limit))
     wait_regret, threshold, wait_limit = min(scores)
+    backtrack_cases = [(rng.uniform(0.1, 0.9), rng.randint(1, 10),
+                        rng.randint(2, 6), rng.randint(0, 3)) for _ in range(trials)]
+    backtrack_scores = []
+    for backtrack_weight in (0, 0.025, 0.05, 0.075, 0.1):
+        regret_total = 0.0
+        for open_rate, delay, detour, backtracks in backtrack_cases:
+            wait_cost = (1 - open_rate) * delay
+            detour_cost = detour + backtracks
+            chosen_wait = (open_rate >= max(0.1, threshold - backtrack_weight * backtracks)
+                           and delay <= wait_limit + backtracks)
+            regret_total += (wait_cost if chosen_wait else detour_cost) - min(wait_cost, detour_cost)
+        backtrack_scores.append((regret_total / trials, backtrack_weight))
+    backtrack_regret, backtrack_weight = min(backtrack_scores)
     profile = {
         "weights": {**DEFAULT_WEIGHTS, "door": door_weight, "repeat": repeat_weight},
         "door_open_rate": threshold,
         "door_wait_limit": wait_limit,
+        "backtrack_wait_weight": backtrack_weight,
         "training": {"seed": seed, "trials": trials, "route_regret": round(regret, 3),
                      "repeat_regret": round(repeat_regret, 3),
-                     "decision_regret": round(wait_regret, 3), "synthetic": True},
+                     "decision_regret": round(wait_regret, 3),
+                     "backtrack_regret": round(backtrack_regret, 3), "synthetic": True},
     }
     output = Path(output)
     output.parent.mkdir(parents=True, exist_ok=True)

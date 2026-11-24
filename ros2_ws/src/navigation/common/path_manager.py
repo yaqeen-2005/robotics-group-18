@@ -121,6 +121,13 @@ class PathManager:
                         door_belief = cell[DOOR_BELIEF]
                     if door_block_rate is None:
                         door_block_rate = cell[BLOCK_RATE]
+            obstacle_points = set(human_cells or []) | set(door_cells or [])
+            backtracks = max(
+                (count for visited, count in self.backtrack_counts.items()
+                 if any(abs(visited[0] - point[0]) + abs(visited[1] - point[1]) <= 2
+                        for point in obstacle_points)),
+                default=0,
+            )
             score = self.human_reroute_score(human_distance, waiting_time)
             kind = "human" if human_blocking else "door"
             decision = self.special_obstacles.decide(
@@ -131,6 +138,7 @@ class PathManager:
                 block_rate=door_block_rate if door_block_rate is not None else 1,
                 human_reroute_score=score,
                 human_threshold=self.reroute_threshold,
+                backtracks=backtracks,
             )
             if decision == "IGNORE":
                 return self._result("MOVE", remaining or generated, score)
