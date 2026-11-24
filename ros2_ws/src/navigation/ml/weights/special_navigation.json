@@ -1,0 +1,23 @@
+{
+  "weights": {
+    "distance": 1.0,
+    "blockage": 4.0,
+    "human": 6.0,
+    "uncertainty": 3.0,
+    "robot_encounter": 4.0,
+    "turn": 0.5,
+    "heuristic": 1.0,
+    "door": 8,
+    "repeat": 2
+  },
+  "door_open_rate": 0.2,
+  "door_wait_limit": 6,
+  "training": {
+    "seed": 18,
+    "trials": 400,
+    "route_regret": 0.172,
+    "repeat_regret": 0.091,
+    "decision_regret": 0.455,
+    "synthetic": true
+  }
+}

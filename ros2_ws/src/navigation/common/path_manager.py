@@ -1,6 +1,8 @@
 """Keep route state and handle human blocking separately from map changes."""
 
 from astar.a_star import plan_path
+from common.special_obstacles import SpecialObstacles
+from common.cell_attributes import BLOCK_RATE, DOOR_BELIEF
 
 DEFAULT_HUMAN_DECISION_WEIGHTS = {
     "bias": 0.0,
@@ -24,6 +26,7 @@ class PathManager:
         max_human_distance=DEFAULT_NORMALISATION_LIMITS["human_distance"],
         max_waiting_time=DEFAULT_NORMALISATION_LIMITS["waiting_time"],
         max_reroutes=DEFAULT_NORMALISATION_LIMITS["reroute_count"],
+        special_obstacles=None,
     ):
         self.reroute_threshold = reroute_threshold
         self.decision_weights = DEFAULT_HUMAN_DECISION_WEIGHTS.copy()
@@ -40,6 +43,11 @@ class PathManager:
         self.current_path = []
         self.previous_paths = []
         self.reroute_count = 0
+        self.repeat_counts = {}
+        self.visit_counts = {}
+        self.backtrack_counts = {}
+        self.last_position = None
+        self.special_obstacles = special_obstacles or SpecialObstacles()
 
     def human_reroute_score(self, human_distance, waiting_time):
         """Return the configurable linear score used for wait/reroute decisions."""
@@ -69,8 +77,18 @@ class PathManager:
         human_distance=0.0,
         waiting_time=0.0,
         human_cells=None,
+        door_cells=None,
+        door_belief=None,
+        door_block_rate=None,
+        obstacle_distance=None,
     ):
         """Generate an A* path every call, then decide whether to adopt it."""
+        if start != self.last_position:
+            self.visit_counts[start] = self.visit_counts.get(start, 0) + 1
+            if self.visit_counts[start] > 1:
+                self.backtrack_counts[start] = self.backtrack_counts.get(start, 0) + 1
+                self.repeat_counts[start] = self.repeat_counts.get(start, 0) + 1
+            self.last_position = start
         generated = plan_path(
             grid,
             start,
@@ -78,6 +96,7 @@ class PathManager:
             attributes,
             weights,
             start_direction,
+            repeat_counts=self.repeat_counts,
         )
         remaining = self._remaining_path(start)
 
@@ -91,16 +110,38 @@ class PathManager:
                 action = "NO_PATH"
             return self._result(action, generated)
 
-        if human_blocking:
+        if human_blocking or door_cells:
+            if door_cells:
+                x, y = min(door_cells, key=lambda point: abs(start[0] - point[0]) + abs(start[1] - point[1]))
+                if obstacle_distance is None:
+                    obstacle_distance = abs(start[0] - x) + abs(start[1] - y)
+                if attributes is not None and len(attributes.values[y][x]) > DOOR_BELIEF:
+                    cell = attributes.values[y][x]
+                    if door_belief is None:
+                        door_belief = cell[DOOR_BELIEF]
+                    if door_block_rate is None:
+                        door_block_rate = cell[BLOCK_RATE]
             score = self.human_reroute_score(human_distance, waiting_time)
-            if score < self.reroute_threshold:
+            kind = "human" if human_blocking else "door"
+            decision = self.special_obstacles.decide(
+                kind,
+                distance=human_distance if human_blocking else (obstacle_distance if obstacle_distance is not None else 0),
+                waiting_time=waiting_time,
+                belief=door_belief if door_belief is not None else 0,
+                block_rate=door_block_rate if door_block_rate is not None else 1,
+                human_reroute_score=score,
+                human_threshold=self.reroute_threshold,
+            )
+            if decision == "IGNORE":
+                return self._result("MOVE", remaining or generated, score)
+            if decision == "WAIT":
                 return self._result("WAIT", remaining, score)
 
             old_path = remaining or self.current_path
             avoided = set(old_path[1:-1])
-            occupied_by_people = set(human_cells or [])
-            occupied_by_people.discard(start)
-            if goal in occupied_by_people:
+            occupied = set(human_cells or []) | set(door_cells or [])
+            occupied.discard(start)
+            if goal in occupied:
                 return self._result("WAIT", old_path, score)
             alternative = plan_path(
                 grid,
@@ -109,8 +150,18 @@ class PathManager:
                 attributes,
                 weights,
                 start_direction,
-                blocked_cells=avoided | occupied_by_people,
+                blocked_cells=avoided | occupied,
+                repeat_counts=self.repeat_counts,
             )
+            if not alternative:
+                repeat_penalties = self.repeat_counts.copy()
+                for point in avoided:
+                    repeat_penalties[point] = repeat_penalties.get(point, 0) + 1
+                alternative = plan_path(
+                    grid, start, goal, attributes, weights, start_direction,
+                    blocked_cells=occupied,
+                    repeat_counts=repeat_penalties,
+                )
             if alternative and alternative != old_path:
                 self._replace_path(alternative, old_path)
                 return self._result("REROUTE", alternative, score)
@@ -138,6 +189,8 @@ class PathManager:
     def _replace_path(self, new_path, old_path):
         if old_path:
             self.previous_paths.append(list(old_path))
+            for point in old_path[1:-1]:
+                self.repeat_counts[point] = self.repeat_counts.get(point, 0) + 1
         self.current_path = new_path
         self.reroute_count += 1
 

@@ -8,6 +8,8 @@ from common.cell_attributes import (
     CONFIDENCE,
     HUMAN_PROBABILITY,
     ROBOT_ENCOUNTER_PROBABILITY,
+    DOOR_BELIEF,
+    BLOCK_RATE,
     CellAttributeMap,
 )
 
@@ -22,6 +24,8 @@ DEFAULT_WEIGHTS = {
     "robot_encounter": 4.0,
     "turn": 0.5,
     "heuristic": 1.0,
+    "door": 8.0,
+    "repeat": 2.0,
 }
 
 
@@ -33,6 +37,7 @@ def plan_path(
     weights: dict | None = None,
     start_direction: GridPoint | None = None,
     blocked_cells=None,
+    repeat_counts=None,
 ) -> list[GridPoint]:
     """Return the lowest-cost 4-connected path, or an empty list.
 
@@ -112,6 +117,11 @@ def plan_path(
                     active_weights["robot_encounter"]
                     * cell[ROBOT_ENCOUNTER_PROBABILITY]
                 )
+                if len(cell) > DOOR_BELIEF:
+                    # Closed fraction estimates expected delay at a door-like cell.
+                    step_cost += active_weights["door"] * cell[DOOR_BELIEF] * cell[BLOCK_RATE]
+            if repeat_counts:
+                step_cost += active_weights["repeat"] * repeat_counts.get(neighbour, 0)
             neighbour_state = (neighbour[0], neighbour[1], move_x, move_y)
             new_cost = cost[current_state] + step_cost
             if neighbour_state not in cost or new_cost < cost[neighbour_state]:

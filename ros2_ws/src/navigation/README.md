@@ -42,9 +42,11 @@ python -m astar.run tests/maps/demo_map.txt --attributes tests/maps/demo_attribu
 
 The map header is `MAP v1 <width> <height>`. All map cells are flattened onto the next line in row-major order. Map symbols are `S` (start), `G` (goal), `.` (free), `#` (obstacle), and `?` (unknown/blocked).
 
-The separate attribute file uses `ATTRIBUTES v2 <width> <height> 4`. Each cell stores confidence, historical blockage probability, human encounter probability, and other-robot encounter probability. All values are between `0.0` and `1.0`.
+The separate attribute file accepts legacy `ATTRIBUTES v2 <width> <height> 4` and new `ATTRIBUTES v3 <width> <height> 10`. The original four fields keep their order. The six appended fields are observation count, block count, block rate, switch count, last state (-1 unknown, 0 free, 1 blocked), and door belief. Old four-field maps supply temporal defaults on demand. Counts are non-negative integers; probabilities are in [0, 1].
 
-The A* cost combines distance and all four risk attributes. Default weights are defined at the top of `astar/a_star.py`; callers may pass a replacement weight dictionary produced by a future training process.
+`TemporalTraversabilityLayer.update(timestamp, observations)` consumes only currently valid sensor observations (`{(x, y): True/False}`), at most once per configured interval (0.5 seconds by default). It never interprets a cached SLAM map as a new observation. `DoorPredictor` loads the trained CNN from `ml/weights/door_belief.pt`; `layer.predict(predictor, cells)` writes its probabilities to the feature map. PyTorch and NumPy are needed for this optional prediction module. Reproduce the 64×64 synthetic scenes, 11×11 patches, compressed data archive and trained model with `python -m ml.door_belief`; train the synthetic door routing profile with `python -m ml.train_special_navigation`. The held-out synthetic classification accuracy is 99.8%, which does not establish real-world detection accuracy.
+
+The A* cost combines distance, the original risk attributes, and, when present, door belief multiplied by observed block rate. A repeated cell can also incur a separate cost. Default weights are defined at the top of `astar/a_star.py`; optional profiles can override them. The synthetic door experiment is in `ml/weights/special_navigation.json`.
 
 Display the map and all four attribute layers:
 
@@ -67,6 +69,8 @@ The inflation component is separate from A*. Do not apply it again when the inpu
 A* keeps the arrival direction internally and adds the configurable `turn` weight when a route changes direction. `FrontierExplorer.next_move()` also returns `heading_rad` and, when the current yaw is supplied to `update_position`, `turn_rad`. `common.path_smoothing.smooth_path(grid, path)` converts each safe right-angle bend into output segments at 30° and 60°; an unsafe bend stays unchanged. The planner and route manager retain their original grid path. The CLI and dynamic demo display use the smoothed output. Run smoothing against an inflated map when robot width matters; wheel control remains the controller's responsibility.
 
 `common.path_manager.PathManager` calls A* on every update but retains the active route unless a non-human map change is explicitly reported. A human obstruction is handled separately by a configurable linear score using human distance, waiting time, and reroute count. It returns `WAIT` below the threshold, or tries a route that avoids the remaining old path above the threshold.
+
+`common.special_obstacles.SpecialObstacles` registers the human and door-like rules. A door is considered only when its belief and proximity pass thresholds; its observed open rate determines whether waiting is reasonable. Both rules use the same rerouting branch. `PathManager.backtrack_counts` tracks actual returns to previously visited cells, while `repeat_counts` additionally penalises cells on abandoned routes; these are different measures. If the old route can be avoided, it is excluded; otherwise A* may reuse it with a penalty. The trained thresholds are only calibrated on synthetic examples. No controller loop or automatic live sensor ingestion is included here.
 
 ## Event history
 

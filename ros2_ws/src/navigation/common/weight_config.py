@@ -9,13 +9,11 @@ from astar.a_star import DEFAULT_WEIGHTS
 def load_weight_config(path):
     data = json.loads(Path(path).read_text())
     weights = data.get("weights", data)
-    missing = set(DEFAULT_WEIGHTS) - set(weights)
     unknown = set(weights) - set(DEFAULT_WEIGHTS)
-    if missing or unknown:
+    if unknown:
         raise ValueError(
-            f"weight names must exactly match defaults; missing={sorted(missing)}, "
-            f"unknown={sorted(unknown)}"
+            f"unknown weight names: {sorted(unknown)}"
         )
     if any(not isinstance(value, (int, float)) or value < 0 for value in weights.values()):
         raise ValueError("all A* weights must be non-negative numbers")
-    return {name: float(value) for name, value in weights.items()}
+    return {name: float(weights.get(name, default)) for name, default in DEFAULT_WEIGHTS.items()}
