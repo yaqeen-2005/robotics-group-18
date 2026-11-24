@@ -1,0 +1,12 @@
+{
+  "scans": 630,
+  "position_rmse_m": 0.2006658373830299,
+  "last_scan_error_m": 0.2966794695805342,
+  "clearance_radius_m": 0.825,
+  "approach_path_found": true,
+  "cells": {
+    "-1": 53110,
+    "100": 1821,
+    "0": 50325
+  }
+}

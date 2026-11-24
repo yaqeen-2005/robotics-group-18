@@ -1,5 +1,6 @@
 """Isolated simulator acceptance probe; uses world pose solely to steer a scripted QA trip."""
 import json
+import csv
 import math
 import os
 from pathlib import Path
@@ -46,8 +47,34 @@ def traction_trials(robot,step,body,motors,tx):
 def main():
     robot=Supervisor(); step=int(robot.getBasicTimeStep())*2; body=robot.getSelf()
     output=Path(__file__).resolve().parents[2]/'probe.json'
+    visual = os.environ.get('G18_DOCKING_TRIAL') == '1'
+    if visual:
+        from docking import dock_command
+        camera = robot.getDevice('dock_camera')
+        camera.enable(step)
+        camera.recognitionEnable(step)
+    docking_errors = {}
+    localization = os.environ.get('G18_LOCALIZATION_TRIAL') == '1'
+    if localization:
+        sys.path.insert(0, str(ROOT))
+        from localization.live_pose import PosePublisher, WarehouseLocalization
+
+        encoders = [robot.getDevice(side+'_wheel_sensor') for side in ('left', 'right')]
+        for encoder in encoders:
+            encoder.enable(step)
+        start = (-38, -3.3, -math.pi/2)
+        estimator = WarehouseLocalization(.15, .82, start)
+        publisher = PosePublisher(ROOT/'pose.json', WarehouseLocalization(.15, .82, start))
+        paired_file = (ROOT/'paired.csv').open('w', newline='', encoding='utf-8', buffering=1)
+        paired = csv.writer(paired_file)
+        paired.writerow(('time_s', 'phase', 'x_m', 'y_m', 'yaw_rad',
+                         'truth_x_m', 'truth_y_m', 'truth_yaw_rad'))
     rx=robot.getDevice('warehouse_events'); rx.enable(step); tx=robot.getDevice('warehouse_commands')
     lidar=robot.getDevice('front_lidar'); lidar.enable(step*8)
+    mapper = None
+    if localization and os.environ.get('G18_MAPPING_TRIAL') == '1':
+        from localization.live_mapping import start_mapper
+        mapper = start_mapper(robot, step, .15, .82, ROOT, ROOT/'warehouse-map.json')
     lift=robot.getDevice('lift_motor'); lift.setVelocity(.25); lift.setPosition(0)
     stages=[robot.getDevice('lift_stage1_motor'),robot.getDevice('lift_stage2_motor')]
     sensor=robot.getDevice('lift_sensor'); sensor.enable(step)
@@ -60,14 +87,37 @@ def main():
     route=[('drive',(-38,-8),1),('drive',(-40,-8),1),('lift',.27,0),('drive',(-36.7,-8),-1),
            ('drive',(-36.7,16),1),('drive',(-40,16),1),('lift',0,0),('drive',(-36.7,16),-1)]
 
+    if visual:
+        offset = float(os.environ.get('G18_APPROACH_OFFSET',0))
+        route[0] = ('drive',(-36.9,-8+offset),1)
+        route[4] = ('drive',(-36.7,16-offset),1)
+
     def finish(ok,reason):
+        if localization:
+            paired_file.close()
         output.write_text(json.dumps(dict(passed=ok,reason=reason,phase=phase,robot=pose,statuses=sorted(states),packets=readings,
-            wrong_command_rejected=ack,lidar=seed_check,berth_checks=len(berth_checks),fades=fades,colour_match=painted,
+            docking_errors=docking_errors,wrong_command_rejected=ack,lidar=seed_check,berth_checks=len(berth_checks),fades=fades,colour_match=painted,
             reports=[list(row) for row in sorted(reports)],samples=samples,traction=traction,floor_drops=staged),indent=2))
         robot.simulationQuit(0 if ok else 1)
 
     while robot.step(step)!=-1:
         now=robot.getTime(); pos=body.getPosition(); ori=body.getOrientation(); yaw=math.atan2(ori[3],ori[0]); pose=[round(pos[0],2),round(pos[1],2),round(yaw,3)]
+        if localization:
+            angles = [encoder.getValue() for encoder in encoders]
+            if mapper is not None:
+                mapper.update(now, angles)
+            estimate = estimator.update(now, angles)
+            publisher.update(now, angles)
+            if estimate is not None:
+                paired.writerow((now, phase, estimate['x_m'], estimate['y_m'],
+                                 estimate['yaw_rad'], pos[0], pos[1], yaw))
+            if phase == len(route) and 'delivered' in states:
+                if mapper is not None:
+                    mapper.save()
+                passed = not visual or (set(docking_errors) == {'P03','D01'} and
+                                        {'ready','in_transit','delivered'} <= states)
+                finish(passed, 'P03 to D01 complete')
+                return
         for spec in CFG['trucks']:
             ident=spec['id']
             if ident in staged:continue
@@ -136,6 +186,19 @@ def main():
             if op=='lift':
                 if now-since>.55: lift.setPosition(target)
                 done=now-since>2.7 and abs(sensor.getValue()-target)<.017
+            elif visual and phase in (1,5):
+                station = 'P03' if phase == 1 else 'D01'
+                speed,spin,done = dock_command(camera,station)
+                if done:
+                    error = math.dist(target,pos[:2])
+                    heading = abs(math.degrees(math.remainder(yaw-math.pi,math.tau)))
+                    docking_errors[station] = dict(position_m=error,heading_deg=heading)
+                    if error > .05 or heading > 3:
+                        finish(False,'Exceeded docking tolerance at '+station)
+                        return
+                if now-since > 60:
+                    finish(False,'Camera docking timed out at '+station)
+                    return
             else:
                 dx,dy=target[0]-pos[0],target[1]-pos[1]; distance=math.hypot(dx,dy)
                 desired=math.atan2(sign*dy,sign*dx); error=math.atan2(math.sin(desired-yaw),math.cos(desired-yaw))
@@ -147,7 +210,7 @@ def main():
                 phase+=1; since=now; speed=spin=0.; samples.append([round(now,2),phase,pose]); print('[QA] phase',phase,pose,flush=True)
         for index,stage in enumerate(stages,1): stage.setPosition(max(0.,sensor.getValue())*index/3)
         motors[0].setVelocity((speed-spin*.41)/.15); motors[1].setVelocity((speed+spin*.41)/.15)
-        if replenished and len(staged)==len(CFG['trucks']):
+        if not localization and replenished and len(staged)==len(CFG['trucks']):
             arrived=phase==len(route) and {'ready','in_transit','delivered'}<=states
             traction=traction_trials(robot,step,body,motors,tx)
             slip=traction['wet']['encoder_m']-traction['wet']['actual_m']

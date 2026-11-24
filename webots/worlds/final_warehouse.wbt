@@ -562,6 +562,24 @@ Pose { translation -37 2.7 0.018 children [ Shape { castShadows FALSE appearance
 Pose { translation -4 2.3 0.018 children [ Shape { castShadows FALSE appearance PBRAppearance { baseColor 1 1 1 metalness 0 roughness 0.85 baseColorMap ImageTexture { url [ "../textures/final_hall/short.png" ] } } geometry Plane { size 4 1 } } ] }
 Pose { translation 3 2.3 0.018 children [ Shape { castShadows FALSE appearance PBRAppearance { baseColor 1 1 1 metalness 0 roughness 0.85 baseColorMap ImageTexture { url [ "../textures/final_hall/cart.png" ] } } geometry Plane { size 4 1 } } ] }
 Pose { translation 8.5 2.3 0.018 children [ Shape { castShadows FALSE appearance PBRAppearance { baseColor 1 1 1 metalness 0 roughness 0.85 baseColorMap ImageTexture { url [ "../textures/final_hall/bulk.png" ] } } geometry Plane { size 4 1 } } ] }
+Solid { name "P01_L" model "P01_L" translation -40.7 -18.24 2.25 recognitionColors [ 0.1 0.8 0.6 ] children [ Shape { appearance USE TEAL geometry Box { size 0.05 0.08 0.08 } } ] }
+Solid { name "P01_R" model "P01_R" translation -40.7 -17.76 2.25 recognitionColors [ 0.1 0.8 0.6 ] children [ Shape { appearance USE TEAL geometry Box { size 0.05 0.08 0.08 } } ] }
+Solid { name "P02_L" model "P02_L" translation -40.7 -13.24 2.25 recognitionColors [ 0.1 0.8 0.6 ] children [ Shape { appearance USE TEAL geometry Box { size 0.05 0.08 0.08 } } ] }
+Solid { name "P02_R" model "P02_R" translation -40.7 -12.76 2.25 recognitionColors [ 0.1 0.8 0.6 ] children [ Shape { appearance USE TEAL geometry Box { size 0.05 0.08 0.08 } } ] }
+Solid { name "P03_L" model "P03_L" translation -40.7 -8.24 2.25 recognitionColors [ 0.1 0.8 0.6 ] children [ Shape { appearance USE TEAL geometry Box { size 0.05 0.08 0.08 } } ] }
+Solid { name "P03_R" model "P03_R" translation -40.7 -7.76 2.25 recognitionColors [ 0.1 0.8 0.6 ] children [ Shape { appearance USE TEAL geometry Box { size 0.05 0.08 0.08 } } ] }
+Solid { name "D01_L" model "D01_L" translation -40.7 15.76 2.25 recognitionColors [ 0.1 0.8 0.6 ] children [ Shape { appearance USE TEAL geometry Box { size 0.05 0.08 0.08 } } ] }
+Solid { name "D01_R" model "D01_R" translation -40.7 16.24 2.25 recognitionColors [ 0.1 0.8 0.6 ] children [ Shape { appearance USE TEAL geometry Box { size 0.05 0.08 0.08 } } ] }
+Solid { name "D02_L" model "D02_L" translation -23.7 27.76 2.25 recognitionColors [ 0.1 0.8 0.6 ] children [ Shape { appearance USE TEAL geometry Box { size 0.05 0.08 0.08 } } ] }
+Solid { name "D02_R" model "D02_R" translation -23.7 28.24 2.25 recognitionColors [ 0.1 0.8 0.6 ] children [ Shape { appearance USE TEAL geometry Box { size 0.05 0.08 0.08 } } ] }
+Solid { name "D03_L" model "D03_L" translation 7.3 27.76 2.25 recognitionColors [ 0.1 0.8 0.6 ] children [ Shape { appearance USE TEAL geometry Box { size 0.05 0.08 0.08 } } ] }
+Solid { name "D03_R" model "D03_R" translation 7.3 28.24 2.25 recognitionColors [ 0.1 0.8 0.6 ] children [ Shape { appearance USE TEAL geometry Box { size 0.05 0.08 0.08 } } ] }
+Solid { name "D04_L" model "D04_L" translation 45.5 20.24 2.25 recognitionColors [ 0.1 0.8 0.6 ] children [ Shape { appearance USE TEAL geometry Box { size 0.05 0.08 0.08 } } ] }
+Solid { name "D04_R" model "D04_R" translation 45.5 19.76 2.25 recognitionColors [ 0.1 0.8 0.6 ] children [ Shape { appearance USE TEAL geometry Box { size 0.05 0.08 0.08 } } ] }
+Solid { name "D05_L" model "D05_L" translation 45.5 -15.76 2.25 recognitionColors [ 0.1 0.8 0.6 ] children [ Shape { appearance USE TEAL geometry Box { size 0.05 0.08 0.08 } } ] }
+Solid { name "D05_R" model "D05_R" translation 45.5 -16.24 2.25 recognitionColors [ 0.1 0.8 0.6 ] children [ Shape { appearance USE TEAL geometry Box { size 0.05 0.08 0.08 } } ] }
+Solid { name "D06_L" model "D06_L" translation 1.3 -28.24 2.25 recognitionColors [ 0.1 0.8 0.6 ] children [ Shape { appearance USE TEAL geometry Box { size 0.05 0.08 0.08 } } ] }
+Solid { name "D06_R" model "D06_R" translation 1.3 -27.76 2.25 recognitionColors [ 0.1 0.8 0.6 ] children [ Shape { appearance USE TEAL geometry Box { size 0.05 0.08 0.08 } } ] }
 DEF TRANSPORT_ROBOT PalletRobot { translation -38 -3.3 .16 rotation 0 0 1 -1.570796327
  extensionSlot [ Receiver { name "warehouse_events" channel 18 } Emitter { name "warehouse_commands" channel 19 } ] }
 DEF FINAL_MANAGER Robot { name "final_warehouse" supervisor TRUE controller "final_warehouse" children [ Emitter { name "events" channel 18 } Receiver { name "commands" channel 19 } ] }

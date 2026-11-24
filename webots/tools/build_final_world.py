@@ -119,6 +119,12 @@ WorldInfo { title "G18 | Meridian distribution hall" basicTimeStep 16 coordinate
         parts.append(pose((x,y,-2),rim,ident=ident+'_REPORT'))
     for label,x,y in [('aisle_a',-17,-3.9),('aisle_b',-17,4.15),('bypass',42,2.7),('bypass',-37,2.7),('short',-4,2.3),('cart',3,2.3),('bulk',8.5,2.3)]:
         parts.append(sign(label,(x,y,.018),(4.0,1)))
+    for station in stations():
+        x,y = station['at']
+        entry = station['entry']
+        for suffix, side in [('L',-1),('R',1)]:
+            label = station['id']+'_'+suffix
+            parts.append(f'Solid {{ name "{label}" model "{label}" translation {x-.70*entry} {y+.24*side*entry} 2.25 recognitionColors [ 0.1 0.8 0.6 ] children [ Shape {{ appearance USE TEAL geometry Box {{ size 0.05 0.08 0.08 }} }} ] }}')
     parts.extend([f'''DEF TRANSPORT_ROBOT PalletRobot {{ translation {px} {py} .16 rotation 0 0 1 -1.570796327
  extensionSlot [ Receiver {{ name "warehouse_events" channel 18 }} Emitter {{ name "warehouse_commands" channel 19 }} ] }}''',
     'DEF FINAL_MANAGER Robot { name "final_warehouse" supervisor TRUE controller "final_warehouse" children [ Emitter { name "events" channel 18 } Receiver { name "commands" channel 19 } ] }'])

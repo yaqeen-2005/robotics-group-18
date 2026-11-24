@@ -6,6 +6,31 @@ Open [worlds/final_warehouse.wbt](worlds/final_warehouse.wbt) in Webots R2025a, 
 
 ## First delivery
 
+### Camera-guided final approach (local prototype)
+
+For the P03 to D01 trial, stop at the east approach, approximately 3.1 m
+from the stand centre, with the aisle clear and the lift stationary. Press
+**K** at P03 or **L** at D01 to acquire the station and enter the rails.
+Use Space to cancel. A successful alignment stops the wheels and prints
+`Dock aligned`; then use the normal lift controls. These keys select fixed
+stations. Check the active order before using L. Seed 18000 supplies the
+P03-to-D01 practice order.
+
+The local world adds two labelled recognition markers behind each stand and
+the robot includes a simulated elevated camera. The controller uses Webots
+camera recognition positions to recover the station centre and entry axis.
+A short centreline lookahead corrects lateral offset before the rails. The
+controller rotates to acquire both markers and times out after 60 simulated
+seconds. Operate from a clear approach with no crossing traffic.
+
+From the repository root run
+`py webots/tools/smoke_final.py --docking --approach-offset 0.15` (also
+supports 0 and -0.15). The test driver supplies the approach and exit.
+During each final entry the same camera controller used by the keyboard
+commands supplies all driving commands. The supervisor measures centre and
+heading errors at alignment and checks the warehouse pickup/delivery events.
+Acceptance requires both stations within 0.05 m and 3 degrees.
+
 1. Press **V** once to look directly at the three roller lanes. Watch a pallet emerge from behind the storage wall. An amber port light means it is feeding; green and **ready** mean the pallet is resting on the pickup rails. Each of the three lanes fills within roughly 15 simulation seconds if the mouths stay clear.
 2. Read the board at the top left: `P03  #003  STANDARD  >  D01 Returns` is an example. The outline on the **pickup stand** and the light above the **destination dock** share a colour: **P01 teal, P02 amber, P03 violet**. The light over the roller opening separately tells you whether that lane is feeding or ready. Use **1**, **2** or **3** to inspect an order.
 3. Approach from the east with the lift down, square to the rails. Drive between them until centred under the pallet. Release the drive controls, wait at least 0.4 s, then hold **U** until the load clears the rails. **PARCEL #… PICKED UP** appears in the centre, and the top left switches to **ON BOARD** with the parcel ID and destination. Release **U**, then reverse straight out before turning. Looking at another lane does not change which parcel is marked as carried.
