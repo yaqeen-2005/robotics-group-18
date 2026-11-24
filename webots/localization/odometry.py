@@ -43,9 +43,20 @@ class DifferentialDriveOdometry:
 
 def replay(stream):
     """Yield (time_s, x_m, y_m, yaw_rad) from a g18-slam-sensors-v1 stream."""
+    metadata = read_header(stream)
+    for pose, _ in replay_frames(stream, metadata):
+        yield pose
+
+
+def read_header(stream):
     metadata = json.loads(next(stream, "null"))
     if not isinstance(metadata, dict) or metadata.get("schema") != "g18-slam-sensors-v1":
         raise ValueError("expected a g18-slam-sensors-v1 header")
+    return metadata
+
+
+def replay_frames(stream, metadata):
+    """Yield timed odometry and its corresponding raw sensor frame."""
     odometry = DifferentialDriveOdometry(metadata["wheel_radius_m"], metadata["wheel_track_m"])
     previous_time = -math.inf
     for line_number, line in enumerate(stream, start=2):
@@ -61,7 +72,7 @@ def replay(stream):
             pose = odometry.update(left, right)
         except (KeyError, TypeError, ValueError) as error:
             raise ValueError(f"line {line_number}: {error}") from error
-        yield (timestamp, *pose)
+        yield (timestamp, *pose), row
 
 
 def plot_trajectory(rows, path):

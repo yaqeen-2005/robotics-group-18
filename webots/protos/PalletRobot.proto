@@ -15,6 +15,14 @@ Robot {
   controller IS controller
   children [
     Group { children IS extensionSlot }
+    Camera {
+      name "dock_camera"
+      translation 0 0 2.09
+      width 160
+      height 80
+      fieldOfView 2
+      recognition Recognition { maxRange 6 occlusion 1 }
+    }
     Pose { translation 0 0 0.10 children [ Shape {
       appearance PBRAppearance { baseColor 0.9 0.65 0.05 roughness 0.7 metalness 0 }
       geometry Box { size 0.99 0.68 0.18 }

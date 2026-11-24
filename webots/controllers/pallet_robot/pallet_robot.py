@@ -5,6 +5,7 @@ from pathlib import Path
 import sys
 from controller import Robot, Keyboard
 from sensor_log import open_sensor_log
+from docking import dock_command
 
 robot = Robot()
 step_ms = int(robot.getBasicTimeStep())
@@ -32,6 +33,12 @@ RADIUS = 0.15
 TRACK = 0.82
 sensor_log = open_sensor_log(robot, step_ms, RADIUS, TRACK)
 pose_publisher = None
+mapper = None
+if os.environ.get("G18_WAREHOUSE_MAP"):
+    root = Path(__file__).resolve().parents[2]
+    sys.path.insert(0, str(root.parent))
+    from webots.localization.live_mapping import start_mapper
+    mapper = start_mapper(robot, step_ms, RADIUS, TRACK, root, os.environ["G18_WAREHOUSE_MAP"])
 if os.environ.get("G18_LOCALIZATION_POSE"):
     sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
     from webots.localization.live_pose import open_pose_publisher
@@ -42,6 +49,10 @@ previous = None
 stopped_for = 0.0
 last_drive_time = -1.0
 command = (0.0, 0.0)
+dock_target = None
+dock_camera = None
+dock_deadline = 0.
+print('Final warehouse: from a clear approach stop, K docks at P03; L docks at D01. Space cancels.')
 held = set()
 lift_jogging = False
 print('Click the 3D view. Hold W/S: forward/reverse, A/D: turn. Space: stop.')
@@ -52,6 +63,8 @@ print('Manual prototype: no attachment, obstacle stop or autonomous controller i
 while robot.step(step_ms) != -1:
     now = robot.getTime()
     angles = [s.getValue() for s in encoders]
+    if mapper is not None:
+        mapper.update(now, angles)
     if pose_publisher is not None:
         pose_publisher.update(now, angles)
     if sensor_log is not None:
@@ -69,6 +82,21 @@ while robot.step(step_ms) != -1:
         key = keyboard.getKey()
     pressed = keys - held
     held = keys
+    manual_keys = set(map(ord, ' WASDUJ'))
+    if keys & manual_keys or now >= dock_deadline:
+        if dock_target:
+            command = (0.,0.)
+        dock_target = None
+    if stopped_for >= .4 and not keys & manual_keys:
+        for key, station in [('K','P03'),('L','D01')]:
+            if ord(key) in pressed:
+                dock_target = station
+                dock_deadline = now + 60.
+                if dock_camera is None:
+                    dock_camera = robot.getDevice('dock_camera')
+                    dock_camera.enable(step_ms)
+                    dock_camera.recognitionEnable(step_ms)
+                print('Visual docking:',station,flush=True)
     if ord(' ') in keys:
         command = (0.0, 0.0)
         last_drive_time = -1.0
@@ -102,7 +130,14 @@ while robot.step(step_ms) != -1:
     lift_jogging = jog_allowed
     moving_lift = (lift_jogging or not math.isfinite(position)
                    or abs(position-lift_target) > 0.003)
+    if dock_target and not moving_lift:
+        v,w,aligned = dock_command(dock_camera,dock_target)
+        command = (v,w)
+        if aligned:
+            print('Dock aligned:',dock_target,flush=True)
+            dock_target = None
     if moving_lift:
+        dock_target = None
         command = (0.0, 0.0)
         last_drive_time = -1.0
     v, yaw = command
@@ -110,3 +145,6 @@ while robot.step(step_ms) != -1:
     right.setVelocity((v+yaw*TRACK/2)/RADIUS)
     if ord('R') in pressed:
         print(f'Lift: {position:.3f} m, target {lift_target:.3f} m; stationary {stopped_for:.2f} s')
+
+if mapper is not None:
+    mapper.save()
