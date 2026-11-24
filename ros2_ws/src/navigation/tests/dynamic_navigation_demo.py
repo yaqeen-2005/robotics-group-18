@@ -12,6 +12,7 @@ from common.event_attributes import apply_new_events
 from common.event_store import EventStore
 from common.human_activity_report import build_human_activity_report
 from common.path_manager import PathManager
+from common.path_smoothing import smooth_path
 
 WIDTH = 24
 HEIGHT = 16
@@ -261,7 +262,8 @@ def show_demo(demo, save_gif=None):
     def update(index):
         frame = frames[index]
         path = frame["path"]
-        route_line.set_data([point[0] for point in path], [point[1] for point in path])
+        display_path = smooth_path(grid, path)
+        route_line.set_data([point[0] for point in display_path], [point[1] for point in display_path])
         route_line.set_color("limegreen" if frame["reroute_count"] else "dodgerblue")
         robot = frame["robot"]
         humans = frame["humans"]

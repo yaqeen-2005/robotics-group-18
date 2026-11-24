@@ -64,7 +64,7 @@ python -m common.inflate_map tests/maps/demo_map.txt tests/maps/demo_attributes.
 
 The inflation component is separate from A*. Do not apply it again when the input is already an inflated Nav2 costmap. Expanded cells copy the nearest obstacle's attributes to keep the files aligned, although blocked-cell attributes do not affect A*.
 
-A* now keeps the arrival direction internally and adds the configurable `turn` weight when a route changes direction. `FrontierExplorer.next_move()` also returns `heading_rad` and, when the current yaw is supplied to `update_position`, `turn_rad`. Path smoothing and wheel control remain the controller's responsibility.
+A* keeps the arrival direction internally and adds the configurable `turn` weight when a route changes direction. `FrontierExplorer.next_move()` also returns `heading_rad` and, when the current yaw is supplied to `update_position`, `turn_rad`. `common.path_smoothing.smooth_path(grid, path)` converts each safe right-angle bend into output segments at 30° and 60°; an unsafe bend stays unchanged. The planner and route manager retain their original grid path. The CLI and dynamic demo display use the smoothed output. Run smoothing against an inflated map when robot width matters; wheel control remains the controller's responsibility.
 
 `common.path_manager.PathManager` calls A* on every update but retains the active route unless a non-human map change is explicitly reported. A human obstruction is handled separately by a configurable linear score using human distance, waiting time, and reroute count. It returns `WAIT` below the threshold, or tries a route that avoids the remaining old path above the threshold.
 

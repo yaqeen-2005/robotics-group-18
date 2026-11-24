@@ -7,6 +7,7 @@ from pathlib import Path
 from astar.a_star import plan_path
 from common.cell_attributes import load_cell_attributes
 from common.map_io import load_text_map
+from common.path_smoothing import smooth_path
 from common.weight_config import load_weight_config
 
 DEFAULT_MAP = Path(__file__).parent.parent / "tests" / "maps" / "demo_map.txt"
@@ -26,13 +27,14 @@ def main() -> int:
         attributes = load_cell_attributes(args.attributes, len(grid[0]), len(grid))
     weights = load_weight_config(args.weights) if args.weights else None
     path = plan_path(grid, start, goal, attributes, weights)
+    output_path = smooth_path(grid, path)
 
     if args.no_visual:
-        print(json.dumps(path))
+        print(json.dumps(output_path))
     else:
         from astar.visualize import show_path
 
-        show_path(grid, path, start, goal)
+        show_path(grid, output_path, start, goal)
     return 0 if path else 1
 
 
