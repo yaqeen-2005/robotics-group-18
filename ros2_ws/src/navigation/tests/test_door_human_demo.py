@@ -22,9 +22,12 @@ class DoorHumanDemoTest(unittest.TestCase):
         self.assertTrue(all(frame["trip"] != 1 or frame["robot"] != PERSON for frame in frames))
         self.assertTrue(all(frame["robot"] not in frame["closed"]
                             for frame in frames))
-        self.assertTrue(any(frame["visual_robot"] != frame["robot"] for frame in frames))
         diagonal_trip = next(frame for frame in frames if frame["trip"] == 2)
-        smoothed = smooth_path(diagonal_trip["grid"], diagonal_trip["path"])
+        smoothed = diagonal_trip["waypoints"]
+        actual_positions = [frame["robot"] for frame in frames if frame["trip"] == 2]
+        self.assertTrue(any(position not in diagonal_trip["path"] for position in actual_positions))
+        self.assertTrue(all(_clear(diagonal_trip["grid"], a, b)
+                            for a, b in zip(actual_positions, actual_positions[1:])))
         self.assertTrue(any(hypot(b[0] - a[0], b[1] - a[1]) > 15
                             and abs(degrees(atan2(b[1] - a[1], b[0] - a[0])) - 30) < 0.01
                             for a, b in zip(smoothed, smoothed[1:])))

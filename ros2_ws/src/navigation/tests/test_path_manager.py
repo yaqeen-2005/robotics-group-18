@@ -31,6 +31,7 @@ class PathManagerTest(unittest.TestCase):
         )
 
         self.assertEqual(result["action"], "WAIT")
+        self.assertEqual(result["waypoints"], [])
 
     def test_human_obstacle_reroutes_away_from_old_path(self):
         manager = PathManager()

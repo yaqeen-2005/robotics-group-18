@@ -4,7 +4,7 @@ The input A* path is never changed. Each corner is checked against the occupancy
 grid independently; an unsafe corner keeps its original right-angle bend.
 """
 
-from math import sqrt
+from math import hypot, sqrt
 
 
 def _clear(grid, start, end):
@@ -85,3 +85,20 @@ def smooth_path(grid, path, radius=0.4):
             output.append(corner)
     output.append(path[-1])
     return output
+
+
+def sample_waypoints(waypoints, step=0.8):
+    """Return continuous positions along the route actually sent for execution."""
+    if step <= 0:
+        raise ValueError("step must be positive")
+    if not waypoints:
+        return []
+    positions = [tuple(waypoints[0])]
+    for start, end in zip(waypoints, waypoints[1:]):
+        length = hypot(end[0] - start[0], end[1] - start[1])
+        segments = max(1, int(length / step + 0.999999))
+        for index in range(1, segments + 1):
+            fraction = index / segments
+            positions.append((start[0] + (end[0] - start[0]) * fraction,
+                              start[1] + (end[1] - start[1]) * fraction))
+    return positions

@@ -7,7 +7,7 @@ from astar.a_star import plan_path
 from common.cell_attributes import CellAttributeMap, DOOR_BELIEF
 from common.inflate_map import inflate_map
 from common.path_manager import PathManager
-from common.path_smoothing import _clear, smooth_path
+from common.path_smoothing import sample_waypoints, smooth_path
 from common.special_obstacles import SpecialObstacles
 from common.temporal_traversability import TemporalTraversabilityLayer
 from ml.door_belief import DoorPredictor
@@ -73,6 +73,19 @@ def run_demo():
         ((START, GOAL), (GOAL, DIAGONAL_GOAL), (DIAGONAL_GOAL, START)), 1
     ):
         manager = PathManager(special_obstacles=SpecialObstacles(door_distance=4))
+        if trip == 2:
+            inflated, _ = inflate_map(grid, inflation_cells=1, protected_points={origin})
+            result = manager.plan(inflated, origin, destination, attributes)
+            for tick, position in enumerate(sample_waypoints(result["waypoints"])):
+                frames.append({"robot": position, "path": result["path"],
+                               "waypoints": result["waypoints"], "action": "MOVE",
+                               "closed": set(), "human_active": False,
+                               "tick": tick, "trip": trip, "destination": destination,
+                               "reroutes": 0, "crossings": len(crossings),
+                               "combined": False, "grid": inflated})
+            if not frames or frames[-1]["robot"] != destination:
+                raise RuntimeError("diagonal execution did not reach C")
+            continue
         manager.plan(grid, origin, destination)
         robot = origin
         waiting = 0
@@ -108,7 +121,8 @@ def run_demo():
             for group, cells in DOOR_GROUPS.items():
                 if previous not in cells and robot in cells:
                     crossings.append((trip, group))
-            frames.append({"robot": robot, "path": result["path"], "action": result["action"],
+            frames.append({"robot": robot, "path": result["path"],
+                           "waypoints": result["waypoints"], "action": result["action"],
                            "closed": closed, "human_active": human_active,
                            "tick": tick, "trip": trip, "destination": destination,
                            "reroutes": manager.reroute_count, "crossings": len(crossings),
@@ -118,22 +132,6 @@ def run_demo():
                 break
         if robot != destination:
             raise RuntimeError(f"trip {trip} stalled at {robot}: {[(f['robot'], f['action']) for f in frames[-5:]]}")
-    for index, frame in enumerate(frames):
-        frame["visual_robot"] = frame["robot"]
-        if frame["trip"] in (2, 3) and GOAL[0] <= frame["robot"][0] <= DIAGONAL_GOAL[0]:
-            x, y = frame["robot"]
-            diagonal_point = (x, 10 + (x - GOAL[0]) / sqrt(3))
-            if abs(y - diagonal_point[1]) <= 1.5 and _clear(frame["grid"], frame["robot"], diagonal_point):
-                frame["visual_robot"] = diagonal_point
-        if index == 0 or index + 1 == len(frames):
-            continue
-        before, after = frames[index - 1], frames[index + 1]
-        if before["trip"] != frame["trip"] or after["trip"] != frame["trip"]:
-            continue
-        points = [before["robot"], frame["robot"], after["robot"]]
-        smoothed = smooth_path(frame["grid"], points)
-        if len(smoothed) == 5 and frame["visual_robot"] == frame["robot"]:
-            frame["visual_robot"] = smoothed[2]
     return grid, frames, belief
 
 
@@ -170,13 +168,13 @@ def show_demo(grid, frames, belief, output=None):
     def update(index):
         frame = frames[index]
         raw_path = frame["path"]
-        path = smooth_path(frame["grid"], frame["path"])
+        path = frame["waypoints"] or smooth_path(frame["grid"], frame["path"])
         raw_line.set_data([x for x, _ in raw_path], [y for _, y in raw_path])
         raw_line.set_visible(frame["trip"] == 2)
         line.set_data([x for x, _ in path], [y for _, y in path])
         diagonal.set_segments([(a, b) for a, b in zip(path, path[1:])
                                if abs(a[0] - b[0]) > 0.01 and abs(a[1] - b[1]) > 0.01])
-        robot_marker.set_offsets([frame["visual_robot"]])
+        robot_marker.set_offsets([frame["robot"]])
         robot_marker.set_facecolor("orange" if frame["action"] == "WAIT" else "royalblue")
         person_marker.set_offsets([PERSON] if frame["trip"] == 1 else np.empty((0, 2)))
         door_markers.set_offsets(sorted(DOOR))

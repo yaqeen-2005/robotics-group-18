@@ -3,6 +3,7 @@
 from astar.a_star import plan_path
 from common.special_obstacles import SpecialObstacles
 from common.cell_attributes import BLOCK_RATE, DOOR_BELIEF
+from common.path_smoothing import smooth_path
 
 DEFAULT_HUMAN_DECISION_WEIGHTS = {
     "bias": 0.0,
@@ -108,7 +109,7 @@ class PathManager:
                 action = "ARRIVED"
             else:
                 action = "NO_PATH"
-            return self._result(action, generated)
+            return self._result(action, generated, grid=grid)
 
         if human_blocking or door_cells:
             if door_cells:
@@ -151,15 +152,15 @@ class PathManager:
                 if door_decision != "IGNORE":
                     occupied.update(door_cells)
             if all(decision == "IGNORE" for decision in decisions):
-                return self._result("MOVE", remaining or generated, score)
+                return self._result("MOVE", remaining or generated, score, grid)
             if "REROUTE" not in decisions:
-                return self._result("WAIT", remaining, score)
+                return self._result("WAIT", remaining, score, grid)
 
             old_path = remaining or self.current_path
             avoided = set(old_path[1:-1])
             occupied.discard(start)
             if goal in occupied:
-                return self._result("WAIT", old_path, score)
+                return self._result("WAIT", old_path, score, grid)
             alternative = plan_path(
                 grid,
                 start,
@@ -181,22 +182,22 @@ class PathManager:
                 )
             if alternative and alternative != old_path:
                 self._replace_path(alternative, old_path)
-                return self._result("REROUTE", alternative, score)
-            return self._result("WAIT", old_path, score)
+                return self._result("REROUTE", alternative, score, grid)
+            return self._result("WAIT", old_path, score, grid)
 
         if map_changed:
             old_path = remaining or self.current_path
             if generated != old_path:
                 self._replace_path(generated, old_path)
                 action = "REROUTE" if generated else "NO_PATH"
-                return self._result(action, generated)
+                return self._result(action, generated, grid=grid)
             self.current_path = generated
-            return self._result("MOVE" if len(generated) > 1 else "NO_PATH", generated)
+            return self._result("MOVE" if len(generated) > 1 else "NO_PATH", generated, grid=grid)
 
         if remaining:
-            return self._result("MOVE" if len(remaining) > 1 else "ARRIVED", remaining)
+            return self._result("MOVE" if len(remaining) > 1 else "ARRIVED", remaining, grid=grid)
         self.current_path = generated
-        return self._result("MOVE" if len(generated) > 1 else "NO_PATH", generated)
+        return self._result("MOVE" if len(generated) > 1 else "NO_PATH", generated, grid=grid)
 
     def _remaining_path(self, start):
         if start not in self.current_path:
@@ -211,10 +212,11 @@ class PathManager:
         self.current_path = new_path
         self.reroute_count += 1
 
-    def _result(self, action, path, score=None):
+    def _result(self, action, path, score=None, grid=None):
         return {
             "action": action,
             "path": path,
+            "waypoints": smooth_path(grid, path) if grid is not None and action != "WAIT" else [],
             "reroute_score": score,
             "reroute_count": self.reroute_count,
         }

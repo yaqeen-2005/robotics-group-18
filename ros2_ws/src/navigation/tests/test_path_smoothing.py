@@ -1,7 +1,7 @@
 import math
 import unittest
 
-from common.path_smoothing import _clear, smooth_path
+from common.path_smoothing import _clear, sample_waypoints, smooth_path
 
 
 class PathSmoothingTest(unittest.TestCase):
@@ -33,6 +33,10 @@ class PathSmoothingTest(unittest.TestCase):
         self.assertTrue(diagonals)
         self.assertEqual(path[0], result[0])
         self.assertEqual(path[-1], result[-1])
+        positions = sample_waypoints(result, step=0.8)
+        self.assertEqual(positions[0], path[0])
+        self.assertEqual(positions[-1], path[-1])
+        self.assertTrue(all(_clear(grid, a, b) for a, b in zip(positions, positions[1:])))
         grid[3][4] = 100
         blocked_result = smooth_path(grid, path)
         self.assertTrue(all(_clear(grid, a, b) for a, b in zip(blocked_result, blocked_result[1:])))
