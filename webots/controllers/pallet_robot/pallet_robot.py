@@ -1,10 +1,13 @@
 """Manual bring-up only. No ROS, autonomous navigation, or ground-truth access."""
 import math
 from controller import Robot, Keyboard
+from lidar import LidarSensor
 
 robot = Robot()
 step_ms = int(robot.getBasicTimeStep())
 dt = step_ms / 1000.0
+lidar = LidarSensor(robot, step_ms)
+
 keyboard = robot.getKeyboard()
 keyboard.enable(step_ms)
 left = robot.getDevice('left_wheel_motor')
@@ -40,6 +43,7 @@ print('Manual prototype: no attachment, obstacle stop or autonomous controller i
 
 while robot.step(step_ms) != -1:
     now = robot.getTime()
+    scan = lidar.get_scan()
     angles = [s.getValue() for s in encoders]
     valid = all(math.isfinite(x) for x in angles)
     wheel_speed = float('inf')
@@ -95,3 +99,13 @@ while robot.step(step_ms) != -1:
     right.setVelocity((v+yaw*TRACK/2)/RADIUS)
     if ord('R') in pressed:
         print(f'Lift: {position:.3f} m, target {lift_target:.3f} m; stationary {stopped_for:.2f} s')
+    if ord('L') in pressed:
+        valid_ranges = [d for d in scan if math.isfinite(d)]
+
+        print(f"LiDAR readings: {len(scan)}")
+
+        if valid_ranges:
+            print(f"Closest obstacle: {min(valid_ranges):.2f} m")
+            print(f"Centre reading: {scan[len(scan) // 2]:.2f} m")
+        else:
+            print("No valid distance readings")
