@@ -39,6 +39,7 @@ lift_jogging = False
 print('Click the 3D view. Hold W/S: forward/reverse, A/D: turn. Space: stop.')
 print('After stopping, hold U/J: raise/lower; release to hold height. Space stops both.')
 print('Lift travel blocks driving. R: print lift position.')
+print('Print LiDAR Data: L.')
 print('Manual prototype: no attachment, obstacle stop or autonomous controller is active.')
 
 while robot.step(step_ms) != -1:
@@ -101,11 +102,30 @@ while robot.step(step_ms) != -1:
         print(f'Lift: {position:.3f} m, target {lift_target:.3f} m; stationary {stopped_for:.2f} s')
     if ord('L') in pressed:
         valid_ranges = [d for d in scan if math.isfinite(d)]
-
         print(f"LiDAR readings: {len(scan)}")
-
+        print(f"Resolution: {lidar.resolution}")
+        print(f"Field of view: {math.degrees(lidar.fov):.2f} degrees")
+        print(f"Angle increment: {math.degrees(lidar.angle_increment):.2f} degrees")
+        print(f"Far left: {scan[0]:.2f} m")
+        print(f"Front left: {scan[90]:.2f} m")
+        print(f"Centre: {scan[180]:.2f} m")
+        print(f"Front right: {scan[270]:.2f} m")
+        print(f"Far right: {scan[359]:.2f} m")
         if valid_ranges:
             print(f"Closest obstacle: {min(valid_ranges):.2f} m")
             print(f"Centre reading: {scan[len(scan) // 2]:.2f} m")
         else:
             print("No valid distance readings")
+        points = lidar.get_points(scan)
+
+        print(f"Detected points: {len(points)}")
+
+        for i in [0, 90, 180, 270, 359]:
+            if i < len(scan) and math.isfinite(scan[i]):
+                angle = lidar.fov / 2 - (i + 0.5) * lidar.angle_increment
+
+                x = scan[i] * math.cos(angle)
+                y = scan[i] * math.sin(angle)
+
+                print(f"Index {i}: X: {x:.3f} m, Y: {y:.3f} m")
+                
