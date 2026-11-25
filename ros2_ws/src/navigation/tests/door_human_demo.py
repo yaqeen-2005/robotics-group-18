@@ -1,13 +1,10 @@
-"""Animate two trips through two layers of door-like warehouse passages."""
+"""Simulate warehouse observations while the navigation modules choose each route."""
 
 import argparse
 from math import sqrt
 
 from common.cell_attributes import CellAttributeMap, DOOR_BELIEF
-from common.inflate_map import inflate_map
-from common.path_manager import PathManager
-from common.path_smoothing import _clear, sample_waypoints
-from common.special_obstacles import SpecialObstacles
+from common.live_navigator import LiveNavigator
 from common.temporal_traversability import TemporalTraversabilityLayer
 from ml.door_belief import DoorPredictor
 
@@ -90,7 +87,7 @@ def make_map():
     for x in range(44, WIDTH - 1):
         centre_y = 10 + (x - GOAL[0]) / sqrt(3)
         for y in range(1, HEIGHT - 1):
-            if abs(y - centre_y) > 3.2:
+            if abs(y - centre_y) > 2.0:
                 grid[y][x] = 100
     return grid
 
@@ -115,54 +112,8 @@ def run_demo():
         ((START, GOAL), (GOAL, DIAGONAL_GOAL),
          (DIAGONAL_GOAL, START), (START, CORNER_GOAL)), 1
     ):
-        manager = PathManager(special_obstacles=SpecialObstacles(door_distance=4))
-        if trip in (2, 3, 4):
-            closed = (DOOR_GROUPS[(23, "lower")] | DOOR_GROUPS[(35, "lower")]
-                      if trip == 3 else set())
-            world = [row[:] for row in grid]
-            for x, y in closed:
-                world[y][x] = 100
-            inflated, _ = inflate_map(world, inflation_cells=1,
-                                      dynamic_obstacles=visible_people(origin, people_at(trip, 0), world),
-                                      protected_points={origin})
-            # This task intentionally allows A*'s natural grid staircase so
-            # the turn-reversal shortcut can be seen and tested clearly.
-            result = manager.plan(inflated, origin, destination, attributes,
-                                  weights={"turn": 0.0} if trip in (2, 3) else None)
-            positions = sample_waypoints(result["waypoints"])
-            raw = manager.raw_path(origin)
-            previous = positions[0]
-            for tick, position in enumerate(positions):
-                for cells in DOOR_GROUPS.values():
-                    old_cell = (round(previous[0]), round(previous[1]))
-                    new_cell = (round(position[0]), round(position[1]))
-                    if old_cell not in cells and new_cell in cells:
-                        crossings.append((trip, new_cell))
-                people = people_at(trip, tick)
-                frames.append({"robot": position, "path": result["path"],
-                               "waypoints": result["waypoints"], "action": "MOVE",
-                               "closed": closed, "human_active": False,
-                               "tick": tick, "trip": trip, "destination": destination,
-                               "reroutes": 0, "crossings": len(crossings),
-                               "combined": False, "grid": inflated,
-                               "raw_path": raw, "trail": positions[:tick + 1],
-                               "people": people,
-                               "visible_people": visible_people(position, people, world),
-                               "visible_cells": visible_map_cells(position, world),
-                               "world": world})
-                previous = position
-            if not frames or frames[-1]["robot"] != destination:
-                raise RuntimeError(f"trip {trip} did not reach its destination")
-            continue
-        manager.plan(grid, origin, destination)
-        robot = origin
-        trail = [robot]
-        waiting = 0
-        pending = []
-        active_path = []
-        active_waypoints = []
-        for tick in range(140):
-            remaining = active_path if pending else manager._remaining_path(robot)
+        navigator = LiveNavigator(origin, destination, sensor_range=SENSOR_RANGE)
+        for tick in range(280):
             people = people_at(trip, tick)
             closed = (DOOR_GROUPS[(23, "upper")] | DOOR_GROUPS[(35, "upper")]
                       if trip == 1 and tick >= 19 else
@@ -171,70 +122,16 @@ def run_demo():
             observed_grid = [row[:] for row in grid]
             for x, y in closed:
                 observed_grid[y][x] = 100
-            seen = visible_people(robot, people, observed_grid)
-            blocking_people = seen.intersection(remaining[1:])
-            nearest_person = min(blocking_people,
-                                 key=lambda point: abs(robot[0] - point[0]) + abs(robot[1] - point[1]),
-                                 default=None)
-            human_active = nearest_person is not None and (abs(robot[0] - nearest_person[0])
-                                                            + abs(robot[1] - nearest_person[1]) <= 6)
-            waiting = waiting + 1 if human_active or closed.intersection(remaining) else 0
-            dynamic = seen
-            inflated, _ = inflate_map(observed_grid, inflation_cells=1,
-                                      dynamic_obstacles=dynamic,
-                                      protected_points={(round(robot[0]), round(robot[1]))})
-            relevant_doors = closed.intersection(remaining)
-            assert inflated[round(robot[1])][round(robot[0])] < 50, (trip, tick, robot)
-            assert inflated[destination[1]][destination[0]] < 50
-            if pending:
-                result = {"action": "MOVE", "path": active_path,
-                          "waypoints": active_waypoints}
-            else:
-                result = manager.plan(
-                    inflated, robot, destination, attributes,
-                    human_blocking=human_active,
-                    human_distance=(abs(robot[0] - nearest_person[0]) + abs(robot[1] - nearest_person[1])
-                                    if nearest_person is not None else SENSOR_RANGE + 1),
-                    waiting_time=waiting,
-                    human_cells={nearest_person} if human_active else None,
-                    door_cells=relevant_doors or None,
-                )
-            previous = robot
-            if result["action"] in ("MOVE", "REROUTE") and len(result["path"]) > 1:
-                if not pending:
-                    waypoints = result["waypoints"]
-                    path = result["path"]
-                    if len(waypoints) > 1 and waypoints[1] != path[1]:
-                        rejoin = next((i for i, point in enumerate(waypoints[1:], 1)
-                                       if point in path[1:]), None)
-                        if rejoin is not None:
-                            pending = sample_waypoints(waypoints[:rejoin + 1])[1:]
-                            active_path, active_waypoints = path, waypoints
-                if pending:
-                    if _clear(inflated, robot, pending[0]) and all(
-                        (pending[0][0] - person[0]) ** 2 +
-                        (pending[0][1] - person[1]) ** 2 >= 1
-                        for person in people
-                    ):
-                        robot = pending.pop(0)
-                    else:
-                        result["action"] = "WAIT"
-                else:
-                    robot = result["path"][1]
-            if robot != previous:
-                trail.append(robot)
+            seen = visible_people(navigator.robot, people, observed_grid)
+            previous = navigator.robot
+            result = navigator.step(observed_grid, seen, closed, attributes)
+            robot = result["robot"]
             for group, cells in DOOR_GROUPS.items():
                 if previous not in cells and robot in cells:
                     crossings.append((trip, group))
-            frames.append({"robot": robot, "path": result["path"],
-                           "waypoints": result["waypoints"], "action": result["action"],
-                           "closed": closed, "human_active": human_active,
+            frames.append({**result, "closed": closed,
                            "tick": tick, "trip": trip, "destination": destination,
-                           "reroutes": manager.reroute_count, "crossings": len(crossings),
-                           "combined": human_active and bool(relevant_doors),
-                           "grid": inflated, "raw_path": manager.raw_path(previous)
-                           if not pending and previous in manager.current_path else manager.raw_path(),
-                           "trail": list(trail), "people": people,
+                           "crossings": len(crossings), "people": people,
                            "visible_people": visible_people(robot, people, observed_grid),
                            "visible_cells": visible_map_cells(robot, observed_grid),
                            "world": observed_grid})
