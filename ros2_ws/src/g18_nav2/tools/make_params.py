@@ -148,6 +148,13 @@ params('planner_server')['GridBased'] = {
     'debug_visualizations': False,
 }
 
+# --- Behaviour tree: name the default tree explicitly so nav2.launch.py
+# (planner:=astar) can swap it; RewrittenYaml only rewrites keys that exist.
+params('bt_navigator')['default_nav_to_pose_bt_xml'] = (
+    '/opt/ros/jazzy/share/nav2_bt_navigator/behavior_trees/'
+    'navigate_to_pose_w_replanning_and_recovery.xml')
+
+
 # --- Behaviours: never back up blind more than a little.
 params('behavior_server')['max_rotational_vel'] = 0.6
 params('behavior_server')['min_rotational_vel'] = 0.2

@@ -14,6 +14,7 @@ setup(
         ('share/' + package_name + '/config', glob('config/*')),
         ('share/' + package_name + '/launch', glob('launch/*.launch.py')),
         ('share/' + package_name + '/maps', glob('maps/*')),
+        ('share/' + package_name + '/behavior_trees', glob('behavior_trees/*.xml')),
     ],
 
     install_requires=['setuptools'],
@@ -33,6 +34,7 @@ setup(
             'go_to = g18_nav2.go_to:main',
             'spill_keepout = g18_nav2.spill_keepout:main',
             'cargo_manager = g18_nav2.cargo_manager:main',
+            'astar_planner = g18_nav2.astar_planner:main',
         ],
     },
 )
