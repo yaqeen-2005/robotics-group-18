@@ -1,18 +1,20 @@
 """Animate two trips through two layers of door-like warehouse passages."""
 
 import argparse
+from math import sqrt
 
 from astar.a_star import plan_path
 from common.cell_attributes import CellAttributeMap, DOOR_BELIEF
 from common.inflate_map import inflate_map
 from common.path_manager import PathManager
-from common.path_smoothing import smooth_path
+from common.path_smoothing import _clear, smooth_path
 from common.special_obstacles import SpecialObstacles
 from common.temporal_traversability import TemporalTraversabilityLayer
 from ml.door_belief import DoorPredictor
 
-WIDTH, HEIGHT = 48, 30
+WIDTH, HEIGHT = 64, 30
 START, GOAL = (4, 10), (43, 10)
+DIAGONAL_GOAL = (59, 19)
 DOOR_GROUPS = {
     (wall, passage): {(wall, y) for y in (range(8, 12) if passage == "upper" else range(21, 25))}
     for wall in (23, 35) for passage in ("upper", "lower")
@@ -42,6 +44,12 @@ def make_map():
                 grid[y][x] = 100
     for x in range(29, 32):
         grid[22][x] = 100
+    # A 30° corridor forces the grid planner to produce a large staircase.
+    for x in range(44, WIDTH - 1):
+        centre_y = 10 + (x - GOAL[0]) / sqrt(3)
+        for y in range(1, HEIGHT - 1):
+            if abs(y - centre_y) > 2.2:
+                grid[y][x] = 100
     return grid
 
 
@@ -61,7 +69,9 @@ def run_demo():
     belief = min(attributes.values[y][x][DOOR_BELIEF] for x, y in DOOR)
     frames = []
     crossings = []
-    for trip, (origin, destination) in enumerate(((START, GOAL), (GOAL, START)), 1):
+    for trip, (origin, destination) in enumerate(
+        ((START, GOAL), (GOAL, DIAGONAL_GOAL), (DIAGONAL_GOAL, START)), 1
+    ):
         manager = PathManager(special_obstacles=SpecialObstacles(door_distance=4))
         manager.plan(grid, origin, destination)
         robot = origin
@@ -73,7 +83,7 @@ def run_demo():
             closed = (DOOR_GROUPS[(23, "upper")] | DOOR_GROUPS[(35, "upper")]
                       if trip == 1 and tick >= 19 else
                       DOOR_GROUPS[(23, "lower")] | DOOR_GROUPS[(35, "lower")]
-                      if trip == 2 else set())
+                      if trip == 3 else set())
             dynamic = {PERSON} if human_active else set()
             observed_grid = [row[:] for row in grid]
             for x, y in closed:
@@ -110,6 +120,11 @@ def run_demo():
             raise RuntimeError(f"trip {trip} stalled at {robot}: {[(f['robot'], f['action']) for f in frames[-5:]]}")
     for index, frame in enumerate(frames):
         frame["visual_robot"] = frame["robot"]
+        if frame["trip"] in (2, 3) and GOAL[0] <= frame["robot"][0] <= DIAGONAL_GOAL[0]:
+            x, y = frame["robot"]
+            diagonal_point = (x, 10 + (x - GOAL[0]) / sqrt(3))
+            if abs(y - diagonal_point[1]) <= 1.5 and _clear(frame["grid"], frame["robot"], diagonal_point):
+                frame["visual_robot"] = diagonal_point
         if index == 0 or index + 1 == len(frames):
             continue
         before, after = frames[index - 1], frames[index + 1]
@@ -117,7 +132,7 @@ def run_demo():
             continue
         points = [before["robot"], frame["robot"], after["robot"]]
         smoothed = smooth_path(frame["grid"], points)
-        if len(smoothed) == 5:
+        if len(smoothed) == 5 and frame["visual_robot"] == frame["robot"]:
             frame["visual_robot"] = smoothed[2]
     return grid, frames, belief
 
@@ -128,7 +143,7 @@ def show_demo(grid, frames, belief, output=None):
     from matplotlib.animation import FuncAnimation, PillowWriter
     from matplotlib.colors import ListedColormap
 
-    figure, axis = plt.subplots(figsize=(13, 8))
+    figure, axis = plt.subplots(figsize=(15, 8))
     axis.imshow([[int(cell >= 50) for cell in row] for row in grid],
                 cmap=ListedColormap(["white", "black"]), vmin=0, vmax=1)
     axis.set_xticks(range(0, WIDTH, 4))
@@ -136,11 +151,15 @@ def show_demo(grid, frames, belief, output=None):
     axis.grid(color="#dddddd", linewidth=0.4)
     axis.scatter(*START, marker="*", s=350, color="orange", zorder=5)
     axis.scatter(*GOAL, marker="*", s=350, color="limegreen", zorder=5)
+    axis.scatter(*DIAGONAL_GOAL, marker="*", s=350, color="deepskyblue", zorder=5)
     axis.text(*START, "A", ha="center", va="bottom", weight="bold")
     axis.text(*GOAL, "B", ha="center", va="bottom", weight="bold")
+    axis.text(*DIAGONAL_GOAL, "C", ha="center", va="bottom", weight="bold")
     door_markers = axis.scatter([], [], marker="s", s=170, color="turquoise", zorder=5)
     person_marker = axis.scatter([], [], marker="o", s=300, color="red", edgecolor="gold", linewidth=2, zorder=6)
     robot_marker = axis.scatter([], [], marker="s", s=300, color="royalblue", edgecolor="yellow", linewidth=2, zorder=7)
+    raw_line, = axis.plot([], [], color="gray", linestyle="--", linewidth=2.5,
+                          marker=".", markersize=4, zorder=3)
     line, = axis.plot([], [], color="limegreen", linewidth=3, zorder=4)
     from matplotlib.collections import LineCollection
     diagonal = LineCollection([], colors="magenta", linewidths=4, zorder=5)
@@ -150,7 +169,10 @@ def show_demo(grid, frames, belief, output=None):
 
     def update(index):
         frame = frames[index]
+        raw_path = frame["path"]
         path = smooth_path(frame["grid"], frame["path"])
+        raw_line.set_data([x for x, _ in raw_path], [y for _, y in raw_path])
+        raw_line.set_visible(frame["trip"] == 2)
         line.set_data([x for x, _ in path], [y for _, y in path])
         diagonal.set_segments([(a, b) for a, b in zip(path, path[1:])
                                if abs(a[0] - b[0]) > 0.01 and abs(a[1] - b[1]) > 0.01])
@@ -163,10 +185,12 @@ def show_demo(grid, frames, belief, output=None):
         banner.set_text("WAITING FOR PERSON" if frame["action"] == "WAIT" else
                         "REROUTE: PERSON + DOOR" if frame["action"] == "REROUTE" and frame["combined"] else
                         "REROUTING" if frame["action"] == "REROUTE" else "")
-        axis.set_title(f"Group 18 | trip {frame['trip']}/2 | step {frame['tick'] + 1} | {frame['action']}\n"
-                       f"Door belief {belief:.2f} | doors crossed {frame['crossings']} | "
+        explanation = ("gray dashed = raw A* staircase | magenta = safe 30° output"
+                       if frame["trip"] == 2 else
                        "cyan open / purple closed / magenta safe 30°/60° turns")
-        return line, diagonal, robot_marker, person_marker, door_markers, banner
+        axis.set_title(f"Group 18 | trip {frame['trip']}/3 | step {frame['tick'] + 1} | {frame['action']}\n"
+                       f"Door belief {belief:.2f} | doors crossed {frame['crossings']} | {explanation}")
+        return raw_line, line, diagonal, robot_marker, person_marker, door_markers, banner
 
     animation = FuncAnimation(figure, update, frames=len(frames), interval=350, repeat=False)
     update(0)
