@@ -17,6 +17,7 @@ import math
 
 import rclpy
 from rclpy.qos import DurabilityPolicy, QoSProfile
+from sensor_msgs.msg import JointState
 from std_msgs.msg import Bool, Float64, String
 
 LIFT_MAX = 0.60
@@ -76,6 +77,9 @@ class WarehouseBridge:
 
         self.height_pub = self.node.create_publisher(Float64, '/lift/height', 10)
         self.moving_pub = self.node.create_publisher(Bool, '/lift/moving', 10)
+        # The drive controller only reports the wheel joints. Without these,
+        # robot_state_publisher has no TF for the lift links (RViz: "No transform").
+        self.joint_pub = self.node.create_publisher(JointState, '/joint_states', 10)
         self.node.create_subscription(Float64, '/lift/command', self._on_lift_command, 10)
         self.since_lift_publish = 0.0
 
@@ -154,3 +158,10 @@ class WarehouseBridge:
             moving = self.pending_lift is not None or abs(height - self.lift_target) > LIFT_TOLERANCE
             self.height_pub.publish(Float64(data=height))
             self.moving_pub.publish(Bool(data=moving))
+            joints = JointState()
+            t = self.robot.getTime()       # simulation time, the same clock as /clock
+            joints.header.stamp.sec = int(t)
+            joints.header.stamp.nanosec = int((t - int(t)) * 1e9)
+            joints.name = ['lift_motor', 'lift_stage1_motor', 'lift_stage2_motor']
+            joints.position = [height, extension / 3, extension * 2 / 3]
+            self.joint_pub.publish(joints)
