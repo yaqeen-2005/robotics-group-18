@@ -16,10 +16,10 @@
   "training": {
     "seed": 18,
     "trials": 400,
-    "route_regret": 0.172,
-    "repeat_regret": 0.091,
-    "decision_regret": 0.455,
-    "backtrack_regret": 0.409,
+    "route_regret": 0.222,
+    "repeat_regret": 0.072,
+    "decision_regret": 0.552,
+    "backtrack_regret": 0.374,
     "synthetic": true
   }
 }

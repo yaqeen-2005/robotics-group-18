@@ -47,12 +47,12 @@ class DoorCNN(nn.Module):
         return self.layers(inputs).flatten()
 
 
-def generate(archive=ARCHIVE, count=2400, size=11, seed=18):
+def generate(archive=ARCHIVE, count=6000, size=11, seed=18):
     """Synthetic 11x11 scenes: static, traffic, and regular/random moving barriers."""
     rng = random.Random(seed)
     samples = np.zeros((count, 9, size, size), np.float32)
     labels = np.zeros(count, np.float32)
-    map_size = max(64, size + 2)
+    map_size = max(96, size + 2)
     center = map_size // 2
     for index in range(count):
         door = index % 2 == 0
@@ -62,8 +62,19 @@ def generate(archive=ARCHIVE, count=2400, size=11, seed=18):
         scene[1] = rng.uniform(0, 0.15)
         scene[2] = rng.uniform(0, 0.2)
         scene[3] = rng.uniform(0, 0.1)
+        # Irregular, sometimes slanted shelf/corridor edges appear near either class.
+        for _ in range(rng.randint(1, 4)):
+            side = rng.choice((-1, 1))
+            edge = center + side * rng.randint(2, 7)
+            slope = rng.choice((-1, 0, 1))
+            for offset in range(-size // 2, size // 2 + 2):
+                x = edge + slope * offset // 3 + rng.choice((-1, 0, 0, 1))
+                y = center + offset
+                if 0 <= x < map_size and 0 <= y < map_size:
+                    scene[0, y, x] = rng.uniform(0.55, 0.85)
+                    scene[1, y, x] = rng.uniform(0.6, 1.0)
         length = rng.randint(1, min(size - 2, 7))
-        diagonal = rng.choice((-1, 0, 1))
+        direction = rng.choice(((1, 0), (0, 1), (1, 1), (1, -1), (1, 2), (2, 1)))
         regular = rng.choice((True, False))
         observations = rng.randint(20, 40)
         if door:
@@ -86,7 +97,7 @@ def generate(archive=ARCHIVE, count=2400, size=11, seed=18):
         blocks = sum(states)
         switches = sum(a != b for a, b in zip(states, states[1:]))
         for offset in range(-(length // 2), length - length // 2):
-            x, y = center + offset, center + offset * diagonal
+            x, y = center + offset * direction[0], center + offset * direction[1]
             if not (0 <= x < map_size and 0 <= y < map_size):
                 continue
             scene[4, y, x] = min(observations / 40, 1)
@@ -112,11 +123,11 @@ def generate(archive=ARCHIVE, count=2400, size=11, seed=18):
     np.savez_compressed(buffer, samples=samples, labels=labels)
     with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED) as file:
         file.writestr("door_samples.npz", buffer.getvalue())
-        file.writestr("metadata.json", json.dumps({"seed": seed, "count": count, "patch_size": size, "map_size": map_size, "sample_interval_seconds": 0.5, "synthetic": True}))
+        file.writestr("metadata.json", json.dumps({"seed": seed, "count": count, "patch_size": size, "map_size": map_size, "cell_size_metres": 0.1, "sample_interval_seconds": 0.5, "synthetic": True}))
     return archive
 
 
-def train(archive=ARCHIVE, output=MODEL, epochs=8, seed=18):
+def train(archive=ARCHIVE, output=MODEL, epochs=12, seed=18):
     torch.manual_seed(seed)
     with zipfile.ZipFile(archive) as file:
         import io
@@ -160,9 +171,9 @@ class DoorPredictor:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--samples", type=int, default=2400)
+    parser.add_argument("--samples", type=int, default=6000)
     parser.add_argument("--size", type=int, default=11)
-    parser.add_argument("--epochs", type=int, default=8)
+    parser.add_argument("--epochs", type=int, default=12)
     args = parser.parse_args()
     generate(count=args.samples, size=args.size)
     print(f"held-out synthetic accuracy: {train(epochs=args.epochs):.3f}")
