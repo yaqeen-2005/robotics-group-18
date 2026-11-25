@@ -1,10 +1,10 @@
-"""Smooth right-angle grid turns into 30°/60° segments for route output only.
+"""Shortcut zigzags and isolated right-angle turns for execution output.
 
 The input A* path is never changed. Each corner is checked against the occupancy
 grid independently; an unsafe corner keeps its original right-angle bend.
 """
 
-from math import cos, hypot, radians, sin, sqrt
+from math import cos, hypot, radians, sin
 
 
 def _clear(grid, start, end):
@@ -64,14 +64,15 @@ def _zigzag_shortcut(grid, path, anchor):
     return best
 
 
-def smooth_path(grid, path, radius=0.4):
-    """Return collision-checked 30°/60° shortcuts and rounded grid bends.
+def smooth_path(grid, path, radius=None):
+    """Return safe 30°/60° zigzag shortcuts or a 45° single-turn shortcut.
 
-    ``radius`` is in cells and must stay below half a cell so adjacent bends
-    cannot overlap. Use an already inflated grid to account for robot width.
+    An isolated 90° bend uses equal legs from the bend along its two straight
+    runs. ``radius`` optionally caps those legs in cells. The original path
+    remains untouched; use an inflated grid when robot width matters.
     """
-    if not 0 < radius < 0.5:
-        raise ValueError("radius must be between 0 and 0.5 cells")
+    if radius is not None and radius <= 0:
+        raise ValueError("radius must be positive")
     if len(path) < 3:
         return list(path)
     route = [path[0]]
@@ -95,27 +96,30 @@ def smooth_path(grid, path, radius=0.4):
         route.append(path[index])
         index += 1
     route.append(path[-1])
-    path = route
-    output = [path[0]]
-    first_length = (sqrt(3) - 1) / (sqrt(3) - 1 / sqrt(3))
-    for before, corner, after in zip(path, path[1:], path[2:]):
-        incoming = (corner[0] - before[0], corner[1] - before[1])
-        outgoing = (after[0] - corner[0], after[1] - corner[1])
-        if abs(incoming[0]) + abs(incoming[1]) != 1 or abs(outgoing[0]) + abs(outgoing[1]) != 1 or incoming[0] * outgoing[0] + incoming[1] * outgoing[1] != 0:
-            output.append(corner)
-            continue
-        entry = (corner[0] - radius * incoming[0], corner[1] - radius * incoming[1])
-        exit_point = (corner[0] + radius * outgoing[0], corner[1] + radius * outgoing[1])
-        middle = (
-            entry[0] + radius * (first_length * incoming[0] + (1 - first_length) * outgoing[0]),
-            entry[1] + radius * (first_length * incoming[1] + (1 - first_length) * outgoing[1]),
-        )
-        if all(_clear(grid, a, b) for a, b in ((output[-1], entry), (entry, middle), (middle, exit_point))):
-            output.extend((entry, middle, exit_point))
-        else:
-            output.append(corner)
-    output.append(path[-1])
-    return output
+    turns = [index for index in range(1, len(route) - 1) if _turn(route, index)]
+    if len(turns) != 1:
+        return route
+    corner_index = turns[0]
+    before, corner, after = route[0], route[corner_index], route[-1]
+    incoming = (corner[0] - before[0], corner[1] - before[1])
+    outgoing = (after[0] - corner[0], after[1] - corner[1])
+    first_leg = hypot(*incoming)
+    second_leg = hypot(*outgoing)
+    if (not first_leg or not second_leg or incoming[0] * outgoing[0] + incoming[1] * outgoing[1] != 0
+            or not ((incoming[0] == 0 and outgoing[1] == 0)
+                    or (incoming[1] == 0 and outgoing[0] == 0))):
+        return route
+    leg = min(first_leg, second_leg, radius if radius is not None else float("inf"))
+    entry = (corner[0] - leg * incoming[0] / first_leg,
+             corner[1] - leg * incoming[1] / first_leg)
+    exit_point = (corner[0] + leg * outgoing[0] / second_leg,
+                  corner[1] + leg * outgoing[1] / second_leg)
+    candidate = [before, entry, exit_point, after]
+    if all(_clear(grid, a, b) for a, b in zip(candidate, candidate[1:])):
+        return [point for index, point in enumerate(candidate)
+                if index == 0 or hypot(point[0] - candidate[index - 1][0],
+                                       point[1] - candidate[index - 1][1]) > 1e-9]
+    return route
 
 
 def sample_waypoints(waypoints, step=0.8):

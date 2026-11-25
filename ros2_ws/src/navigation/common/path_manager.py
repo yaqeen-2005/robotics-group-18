@@ -204,6 +204,10 @@ class PathManager:
             return []
         return self.current_path[self.current_path.index(start) :]
 
+    def raw_path(self, start=None):
+        """Return a copy of the unsmoothed grid path for inspection/display."""
+        return list(self.current_path if start is None else self._remaining_path(start))
+
     def _replace_path(self, new_path, old_path):
         if old_path:
             self.previous_paths.append(list(old_path))

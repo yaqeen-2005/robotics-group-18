@@ -9,6 +9,7 @@ class PathManagerTest(unittest.TestCase):
         manager = PathManager()
         clear = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
         manager.plan(clear, (0, 1), (2, 1))
+        self.assertEqual(manager.raw_path(), [(0, 1), (1, 1), (2, 1)])
 
         changed = [[0, 0, 0], [0, 100, 0], [0, 0, 0]]
         result = manager.plan(changed, (0, 1), (2, 1), map_changed=True)

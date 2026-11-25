@@ -5,19 +5,19 @@ from common.path_smoothing import _clear, sample_waypoints, smooth_path
 
 
 class PathSmoothingTest(unittest.TestCase):
-    def test_turn_uses_30_and_60_degree_segments_without_mutating_path(self):
+    def test_single_turn_uses_a_safe_45_degree_hypotenuse(self):
         grid = [[0] * 4 for _ in range(4)]
         path = [(0, 1), (1, 1), (1, 2)]
         result = smooth_path(grid, path)
         self.assertEqual(path, [(0, 1), (1, 1), (1, 2)])
         self.assertEqual((result[0], result[-1]), (path[0], path[-1]))
         angles = [round(math.degrees(math.atan2(b[1] - a[1], b[0] - a[0]))) for a, b in zip(result, result[1:])]
-        self.assertEqual(angles, [0, 30, 60, 90])
+        self.assertEqual(angles, [45])
 
     def test_blocked_corner_falls_back_to_original_bend(self):
-        grid = [[0] * 4 for _ in range(4)]
+        grid = [[0] * 5 for _ in range(5)]
         grid[1][1] = 100
-        path = [(0, 1), (1, 1), (1, 2)]
+        path = [(0, 0), (1, 0), (2, 0), (2, 1), (2, 2)]
         self.assertEqual(smooth_path(grid, path), path)
 
     def test_long_staircase_becomes_a_safe_30_degree_segment(self):
