@@ -3,7 +3,6 @@
 import argparse
 from math import sqrt
 
-from astar.a_star import plan_path
 from common.cell_attributes import CellAttributeMap, DOOR_BELIEF
 from common.inflate_map import inflate_map
 from common.path_manager import PathManager
@@ -26,13 +25,44 @@ DOOR = set().union(*DOOR_GROUPS.values())
 PERSON = (26, 10)
 
 
-def people_for_trip(trip):
-    return ((PERSON,) if trip == 1 else ()) + BACKGROUND_PEOPLE
+def people_at(trip, tick):
+    moving = (
+        (9 + (tick // 5) % 3, 18),
+        (29, 17 + (tick // 7) % 2),
+        (40 + (tick // 6) % 2, 15),
+    )
+    return ((26 + (tick // 4) % 2, 10),) + moving if trip == 1 else moving
 
 
-def visible_people(robot, people):
+def in_range(robot, point):
+    return (point[0] - robot[0]) ** 2 + (point[1] - robot[1]) ** 2 <= SENSOR_RANGE ** 2
+
+
+def line_of_sight(grid, robot, point):
+    distance = sqrt((point[0] - robot[0]) ** 2 + (point[1] - robot[1]) ** 2)
+    if distance == 0:
+        return True
+    for index in range(1, int(distance * 8)):
+        fraction = index / (distance * 8)
+        x = int(robot[0] + (point[0] - robot[0]) * fraction + 0.5)
+        y = int(robot[1] + (point[1] - robot[1]) * fraction + 0.5)
+        if (x, y) != tuple(point) and grid[y][x] >= 50:
+            return False
+    return True
+
+
+def visible_people(robot, people, grid=None):
     return {point for point in people
-            if (point[0] - robot[0]) ** 2 + (point[1] - robot[1]) ** 2 <= SENSOR_RANGE ** 2}
+            if in_range(robot, point) and (grid is None or line_of_sight(grid, robot, point))}
+
+
+def visible_map_cells(robot, grid):
+    left = max(0, int(robot[0] - SENSOR_RANGE - 1))
+    right = min(WIDTH, int(robot[0] + SENSOR_RANGE + 2))
+    top = max(0, int(robot[1] - SENSOR_RANGE - 1))
+    bottom = min(HEIGHT, int(robot[1] + SENSOR_RANGE + 2))
+    return {(x, y) for y in range(top, bottom) for x in range(left, right)
+            if in_range(robot, (x, y)) and line_of_sight(grid, robot, (x, y))}
 
 
 def make_map():
@@ -86,27 +116,41 @@ def run_demo():
          (DIAGONAL_GOAL, START), (START, CORNER_GOAL)), 1
     ):
         manager = PathManager(special_obstacles=SpecialObstacles(door_distance=4))
-        people = people_for_trip(trip)
-        if trip in (2, 4):
-            inflated, _ = inflate_map(grid, inflation_cells=1,
-                                      dynamic_obstacles=visible_people(origin, people),
+        if trip in (2, 3, 4):
+            closed = (DOOR_GROUPS[(23, "lower")] | DOOR_GROUPS[(35, "lower")]
+                      if trip == 3 else set())
+            world = [row[:] for row in grid]
+            for x, y in closed:
+                world[y][x] = 100
+            inflated, _ = inflate_map(world, inflation_cells=1,
+                                      dynamic_obstacles=visible_people(origin, people_at(trip, 0), world),
                                       protected_points={origin})
             # This task intentionally allows A*'s natural grid staircase so
             # the turn-reversal shortcut can be seen and tested clearly.
             result = manager.plan(inflated, origin, destination, attributes,
-                                  weights={"turn": 0.0} if trip == 2 else None)
+                                  weights={"turn": 0.0} if trip in (2, 3) else None)
             positions = sample_waypoints(result["waypoints"])
             raw = manager.raw_path(origin)
+            previous = positions[0]
             for tick, position in enumerate(positions):
+                for cells in DOOR_GROUPS.values():
+                    old_cell = (round(previous[0]), round(previous[1]))
+                    new_cell = (round(position[0]), round(position[1]))
+                    if old_cell not in cells and new_cell in cells:
+                        crossings.append((trip, new_cell))
+                people = people_at(trip, tick)
                 frames.append({"robot": position, "path": result["path"],
                                "waypoints": result["waypoints"], "action": "MOVE",
-                               "closed": set(), "human_active": False,
+                               "closed": closed, "human_active": False,
                                "tick": tick, "trip": trip, "destination": destination,
                                "reroutes": 0, "crossings": len(crossings),
                                "combined": False, "grid": inflated,
                                "raw_path": raw, "trail": positions[:tick + 1],
                                "people": people,
-                               "visible_people": visible_people(position, people)})
+                               "visible_people": visible_people(position, people, world),
+                               "visible_cells": visible_map_cells(position, world),
+                               "world": world})
+                previous = position
             if not frames or frames[-1]["robot"] != destination:
                 raise RuntimeError(f"trip {trip} did not reach its destination")
             continue
@@ -116,22 +160,23 @@ def run_demo():
         waiting = 0
         for tick in range(140):
             remaining = manager._remaining_path(robot)
-            seen = visible_people(robot, people)
+            people = people_at(trip, tick)
+            closed = (DOOR_GROUPS[(23, "upper")] | DOOR_GROUPS[(35, "upper")]
+                      if trip == 1 and tick >= 19 else
+                      DOOR_GROUPS[(23, "lower")] | DOOR_GROUPS[(35, "lower")]
+                      if trip == 3 else set())
+            observed_grid = [row[:] for row in grid]
+            for x, y in closed:
+                observed_grid[y][x] = 100
+            seen = visible_people(robot, people, observed_grid)
             blocking_people = seen.intersection(remaining[1:])
             nearest_person = min(blocking_people,
                                  key=lambda point: abs(robot[0] - point[0]) + abs(robot[1] - point[1]),
                                  default=None)
             human_active = nearest_person is not None and (abs(robot[0] - nearest_person[0])
                                                             + abs(robot[1] - nearest_person[1]) <= 6)
-            waiting = waiting + 1 if human_active else 0
-            closed = (DOOR_GROUPS[(23, "upper")] | DOOR_GROUPS[(35, "upper")]
-                      if trip == 1 and tick >= 19 else
-                      DOOR_GROUPS[(23, "lower")] | DOOR_GROUPS[(35, "lower")]
-                      if trip == 3 else set())
+            waiting = waiting + 1 if human_active or closed.intersection(remaining) else 0
             dynamic = seen
-            observed_grid = [row[:] for row in grid]
-            for x, y in closed:
-                observed_grid[y][x] = 100
             inflated, _ = inflate_map(observed_grid, inflation_cells=1,
                                       dynamic_obstacles=dynamic,
                                       protected_points={robot})
@@ -163,7 +208,9 @@ def run_demo():
                            "combined": human_active and bool(relevant_doors),
                            "grid": inflated, "raw_path": manager.raw_path(previous),
                            "trail": list(trail), "people": people,
-                           "visible_people": visible_people(robot, people)})
+                           "visible_people": visible_people(robot, people, observed_grid),
+                           "visible_cells": visible_map_cells(robot, observed_grid),
+                           "world": observed_grid})
             if robot == destination:
                 break
         if robot != destination:
@@ -181,6 +228,9 @@ def show_demo(grid, frames, belief, output=None):
     figure, axis = plt.subplots(figsize=(15, 8))
     axis.imshow([[int(cell >= 50) for cell in row] for row in grid],
                 cmap=ListedColormap(["white", "black"]), vmin=0, vmax=1)
+    fog = axis.imshow(np.ones((HEIGHT, WIDTH)),
+                      cmap=ListedColormap([(0, 0, 0, 0), (0.55, 0.55, 0.55, 1)]),
+                      vmin=0, vmax=1, zorder=2)
     axis.set_xticks(range(0, WIDTH, 4))
     axis.set_yticks(range(0, HEIGHT, 4))
     axis.grid(color="#dddddd", linewidth=0.4)
@@ -206,6 +256,8 @@ def show_demo(grid, frames, belief, output=None):
 
     def update(index):
         frame = frames[index]
+        fog.set_data([[0 if (x, y) in frame["visible_cells"] else 1
+                       for x in range(WIDTH)] for y in range(HEIGHT)])
         raw_path = frame["raw_path"]
         path = frame["trail"]
         raw_line.set_data([x for x, _ in raw_path], [y for _, y in raw_path])
@@ -215,24 +267,33 @@ def show_demo(grid, frames, belief, output=None):
         sensor_circle.center = frame["robot"]
         people = frame["people"]
         person_marker.set_offsets(people if people else np.empty((0, 2)))
-        person_marker.set_facecolors(["red" if point in frame["visible_people"] else "gray"
-                                      for point in people])
-        person_marker.set_edgecolors(["gold" if point in frame["visible_people"] else "white"
-                                      for point in people])
+        person_marker.set_facecolors([
+            "red" if point in frame["visible_people"] else
+            (0, 0, 0, 0) if in_range(frame["robot"], point) else "gray"
+            for point in people
+        ])
+        person_marker.set_edgecolors([
+            "gold" if point in frame["visible_people"] else
+            (0, 0, 0, 0) if in_range(frame["robot"], point) else "white"
+            for point in people
+        ])
         door_markers.set_offsets(sorted(DOOR))
-        door_markers.set_facecolors([
-            "gray" if (point[0] - frame["robot"][0]) ** 2 +
-            (point[1] - frame["robot"][1]) ** 2 > SENSOR_RANGE ** 2 else
+        door_colors = [
+            "gray" if not in_range(frame["robot"], point) else
+            (0, 0, 0, 0) if not line_of_sight(frame["world"], frame["robot"], point) else
             "purple" if point in frame["closed"] else "turquoise"
             for point in sorted(DOOR)
-        ])
-        banner.set_text("WAITING FOR PERSON" if frame["action"] == "WAIT" else
+        ]
+        door_markers.set_facecolors(door_colors)
+        door_markers.set_edgecolors(door_colors)
+        banner.set_text(("WAITING FOR PERSON" if frame["human_active"] else "WAITING FOR DOOR")
+                        if frame["action"] == "WAIT" else
                         "REROUTE: PERSON + DOOR" if frame["action"] == "REROUTE" and frame["combined"] else
                         "REROUTING" if frame["action"] == "REROUTE" else "")
         axis.set_title(f"Group 18 | trip {frame['trip']}/4 | step {frame['tick'] + 1} | {frame['action']}\n"
                        f"Gray dashed = raw A* | green = travelled | blue circle = sensor range | "
                        f"doors crossed {frame['crossings']}")
-        return raw_line, line, robot_marker, person_marker, door_markers, sensor_circle, banner
+        return fog, raw_line, line, robot_marker, person_marker, door_markers, sensor_circle, banner
 
     animation = FuncAnimation(figure, update, frames=len(frames), interval=350, repeat=False)
     update(0)

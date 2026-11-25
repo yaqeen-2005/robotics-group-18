@@ -1,7 +1,10 @@
 import unittest
 from math import atan2, degrees, hypot
 
-from tests.door_human_demo import CORNER_GOAL, DIAGONAL_GOAL, GOAL, PERSON, START, run_demo
+from tests.door_human_demo import (
+    CORNER_GOAL, DIAGONAL_GOAL, GOAL, PERSON, START, DOOR_GROUPS,
+    in_range, line_of_sight, make_map, people_at, run_demo,
+)
 from common.path_smoothing import _clear, smooth_path
 
 
@@ -14,18 +17,26 @@ class DoorHumanDemoTest(unittest.TestCase):
         self.assertTrue(any(frame["trip"] == 2 and frame["robot"] == DIAGONAL_GOAL for frame in frames))
         self.assertTrue(any(frame["trip"] == 3 and frame["robot"] == START for frame in frames))
         self.assertEqual(frames[-1]["crossings"], 4)
-        entries = [(frame["trip"], frame["robot"][0]) for previous, frame in zip(frames, frames[1:])
+        entries = [(frame["trip"], round(frame["robot"][0])) for previous, frame in zip(frames, frames[1:])
                    if frame["crossings"] > previous["crossings"]]
         self.assertEqual(entries, [(1, 23), (1, 35), (3, 35), (3, 23)])
         self.assertTrue(any(frame["action"] == "WAIT" for frame in frames))
-        self.assertTrue(any(frame["action"] == "REROUTE" and frame["combined"]
-                            for frame in frames))
-        self.assertTrue(all(frame["trip"] != 1 or frame["robot"] != PERSON for frame in frames))
-        self.assertTrue(all(frame["robot"] not in frame["closed"]
+        self.assertTrue(any(frame["action"] == "WAIT" and frame["human_active"] for frame in frames))
+        self.assertTrue(any(frame["action"] == "REROUTE" and frame["closed"] for frame in frames))
+        self.assertTrue(all(frame["trip"] != 1 or frame["robot"] not in frame["people"] for frame in frames))
+        self.assertTrue(all(
+            (frame["robot"][0] - person[0]) ** 2 +
+            (frame["robot"][1] - person[1]) ** 2 >= 1
+            for frame in frames for person in frame["people"]
+        ))
+        self.assertTrue(all((round(frame["robot"][0]), round(frame["robot"][1])) not in frame["closed"]
                             for frame in frames))
         self.assertNotIn(PERSON, frames[0]["visible_people"])
-        self.assertTrue(any(PERSON in frame["visible_people"] for frame in frames))
+        self.assertTrue(any(frame["human_active"] for frame in frames))
         self.assertTrue(all(len(frame["people"]) >= 3 for frame in frames))
+        self.assertNotEqual(people_at(1, 0), people_at(1, 8))
+        self.assertTrue(all(frame["visible_people"].issubset(frame["visible_cells"])
+                            for frame in frames))
         self.assertTrue(all(frame["trail"][-1] == frame["robot"] for frame in frames))
         diagonal_trip = next(frame for frame in frames if frame["trip"] == 2)
         smoothed = diagonal_trip["waypoints"]
@@ -61,6 +72,12 @@ class DoorHumanDemoTest(unittest.TestCase):
         )
         self.assertTrue(all(_clear(corner_trip["grid"], a, b)
                             for a, b in zip(corner_trip["trail"], corner_trip["trail"][1:])))
+        return_trip = next(frame for frame in frames if frame["trip"] == 3)
+        self.assertTrue(any(
+            hypot(b[0] - a[0], b[1] - a[1]) > 8
+            and abs(abs(degrees(atan2(b[1] - a[1], b[0] - a[0]))) - 150) < 0.01
+            for a, b in zip(return_trip["waypoints"], return_trip["waypoints"][1:])
+        ))
         self.assertTrue(any(
             a[0] != b[0] and a[1] != b[1]
             for frame in frames for a, b in zip(
@@ -68,6 +85,14 @@ class DoorHumanDemoTest(unittest.TestCase):
                 smooth_path(frame["grid"], frame["path"])[1:],
             )
         ))
+
+    def test_closed_door_hides_a_person_inside_sensor_radius(self):
+        grid = make_map()
+        for x, y in DOOR_GROUPS[(23, "upper")]:
+            grid[y][x] = 100
+        robot, person = (20, 10), (26, 10)
+        self.assertTrue(in_range(robot, person))
+        self.assertFalse(line_of_sight(grid, robot, person))
 
 
 if __name__ == "__main__":
