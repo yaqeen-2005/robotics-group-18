@@ -83,6 +83,13 @@ class DoorHumanDemoTest(unittest.TestCase):
         self.assertTrue(all(_clear(corner_trip["grid"], a, b)
                             for a, b in zip(corner_trip["trail"], corner_trip["trail"][1:])))
         return_trip = next(frame for frame in frames if frame["trip"] == 3)
+        self.assertIn((37, 12), return_trip["waypoints"])
+        self.assertNotIn((37, 11), return_trip["waypoints"])
+        self.assertNotIn((36, 11), return_trip["waypoints"])
+        self.assertTrue(all(
+            _clear(return_trip["grid"], a, b)
+            for a, b in zip(return_trip["waypoints"], return_trip["waypoints"][1:])
+        ))
         self.assertTrue(any(
             hypot(b[0] - a[0], b[1] - a[1]) > 8
             and abs(abs(degrees(atan2(b[1] - a[1], b[0] - a[0]))) - 150) < 0.01

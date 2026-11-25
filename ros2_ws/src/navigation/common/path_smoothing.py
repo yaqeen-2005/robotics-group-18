@@ -78,21 +78,36 @@ def smooth_path(grid, path, radius=None):
     route = [path[0]]
     index = 1
     last_turn = 0
+    last_turn_index = None
+    last_turn_route_index = None
     while index < len(path) - 1:
         turn = _turn(path, index)
         if turn and last_turn and turn != last_turn:
-            shortcut = _zigzag_shortcut(grid, path, index)
+            # The first bend may provide a clear ray even when the second
+            # bend is too close to the wall or the end of the staircase.
+            previous_shortcut = _zigzag_shortcut(grid, path, last_turn_index)
+            current_shortcut = _zigzag_shortcut(grid, path, index)
+            anchor_is_previous = previous_shortcut is not None and (
+                current_shortcut is None or previous_shortcut[0] >= current_shortcut[0]
+            )
+            shortcut = previous_shortcut if anchor_is_previous else current_shortcut
             if shortcut is not None:
                 end, _, point = shortcut
-                route.append(path[index])
+                if anchor_is_previous:
+                    route = route[:last_turn_route_index + 1]
+                else:
+                    route.append(path[index])
                 route.append(point)
                 if hypot(point[0] - path[end + 1][0], point[1] - path[end + 1][1]) > 1e-9:
                     route.append(path[end + 1])
                 index = end + 2
                 last_turn = 0
+                last_turn_index = None
                 continue
         if turn:
             last_turn = turn
+            last_turn_index = index
+            last_turn_route_index = len(route)
         route.append(path[index])
         index += 1
     route.append(path[-1])
