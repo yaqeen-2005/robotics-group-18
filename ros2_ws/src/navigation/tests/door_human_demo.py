@@ -7,7 +7,7 @@ from pathlib import Path
 
 from common.cell_attributes import CellAttributeMap, DOOR_BELIEF
 from common.live_navigator import LiveNavigator
-from common.path_smoothing import _zigzag_shortcut
+from common.path_smoothing import _clear, _zigzag_shortcut
 from common.temporal_traversability import TemporalTraversabilityLayer
 from ml.door_belief import DoorPredictor
 
@@ -152,6 +152,31 @@ def save_debug_paths(frames, output, trip=1):
     def same_direction(a, b):
         return a[0] * b[1] == a[1] * b[0] and a[0] * b[0] + a[1] * b[1] > 0
 
+    def full_45_clear(grid, path, index):
+        corner = path[index]
+        incoming = (corner[0] - path[index - 1][0], corner[1] - path[index - 1][1])
+        outgoing = (path[index + 1][0] - corner[0], path[index + 1][1] - corner[1])
+        if not ((incoming[0] == 0 and outgoing[1] == 0)
+                or (incoming[1] == 0 and outgoing[0] == 0)):
+            return False
+        start = index - 1
+        while start > 0 and same_direction(
+            (path[start][0] - path[start - 1][0], path[start][1] - path[start - 1][1]),
+            incoming,
+        ):
+            start -= 1
+        end = index + 1
+        while end < len(path) - 1 and same_direction(
+            (path[end + 1][0] - path[end][0], path[end + 1][1] - path[end][1]),
+            outgoing,
+        ):
+            end += 1
+        leg = min(abs(corner[0] - path[start][0]) + abs(corner[1] - path[start][1]),
+                  abs(path[end][0] - corner[0]) + abs(path[end][1] - corner[1]))
+        entry = (corner[0] - leg * incoming[0], corner[1] - leg * incoming[1])
+        exit_point = (corner[0] + leg * outgoing[0], corner[1] + leg * outgoing[1])
+        return _clear(grid, entry, exit_point)
+
     selected = [frame for frame in frames if trip == 0 or frame["trip"] == trip]
     if not selected:
         raise ValueError(f"no frames for trip {trip}")
@@ -192,7 +217,7 @@ def save_debug_paths(frames, output, trip=1):
                 {"point": path[index],
                  "safe_30_or_60_shortcut_from_here":
                      _zigzag_shortcut(frame["grid"], path, index) is not None,
-                 "single_turn_45_rule_applies": len(turn_indices) == 1}
+                 "full_45_shortcut_clear": full_45_clear(frame["grid"], path, index)}
                 for index in kept
             ],
             "observed_people": sorted(frame["observed_people"]),

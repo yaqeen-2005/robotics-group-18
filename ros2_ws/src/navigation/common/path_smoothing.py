@@ -1,4 +1,4 @@
-"""Shortcut zigzags and isolated right-angle turns for execution output.
+"""Shortcut zigzags and safe right-angle turns for execution output.
 
 The input A* path is never changed. Each corner is checked against the occupancy
 grid independently; an unsafe corner keeps its original right-angle bend.
@@ -64,10 +64,58 @@ def _zigzag_shortcut(grid, path, anchor):
     return best
 
 
-def smooth_path(grid, path, radius=None):
-    """Return safe 30°/60° zigzag shortcuts or a 45° single-turn shortcut.
+def _smooth_right_angles(grid, route, radius):
+    def same_direction(a, b):
+        return abs(a[0] * b[1] - a[1] * b[0]) < 1e-9 and a[0] * b[0] + a[1] * b[1] > 0
 
-    An isolated 90° bend uses equal legs from the bend along its two straight
+    while True:
+        for index in range(1, len(route) - 1):
+            before, corner, after = route[index - 1:index + 2]
+            incoming = (corner[0] - before[0], corner[1] - before[1])
+            outgoing = (after[0] - corner[0], after[1] - corner[1])
+            if not ((incoming[0] == 0 and outgoing[1] == 0)
+                    or (incoming[1] == 0 and outgoing[0] == 0)):
+                continue
+            start = index - 1
+            while start > 0 and same_direction(
+                (route[start][0] - route[start - 1][0], route[start][1] - route[start - 1][1]),
+                incoming,
+            ):
+                start -= 1
+            end = index + 1
+            while end < len(route) - 1 and same_direction(
+                (route[end + 1][0] - route[end][0], route[end + 1][1] - route[end][1]),
+                outgoing,
+            ):
+                end += 1
+            first_leg = hypot(corner[0] - route[start][0], corner[1] - route[start][1])
+            second_leg = hypot(route[end][0] - corner[0], route[end][1] - corner[1])
+            leg = min(first_leg, second_leg, radius if radius is not None else float("inf"))
+            entry = (corner[0] - leg * incoming[0] / hypot(*incoming),
+                     corner[1] - leg * incoming[1] / hypot(*incoming))
+            exit_point = (corner[0] + leg * outgoing[0] / hypot(*outgoing),
+                          corner[1] + leg * outgoing[1] / hypot(*outgoing))
+            prefix = route[:index]
+            while prefix and hypot(prefix[-1][0] - corner[0], prefix[-1][1] - corner[1]) < leg - 1e-9:
+                prefix.pop()
+            suffix = route[index + 1:]
+            while suffix and hypot(suffix[0][0] - corner[0], suffix[0][1] - corner[1]) < leg - 1e-9:
+                suffix.pop(0)
+            candidate = prefix + [entry, exit_point] + suffix
+            candidate = [point for position, point in enumerate(candidate)
+                         if position == 0 or hypot(point[0] - candidate[position - 1][0],
+                                                    point[1] - candidate[position - 1][1]) > 1e-9]
+            if all(_clear(grid, a, b) for a, b in zip(candidate, candidate[1:])):
+                route = candidate
+                break
+        else:
+            return route
+
+
+def smooth_path(grid, path, radius=None):
+    """Return safe 30°/60° zigzag shortcuts and local 45° turn shortcuts.
+
+    A 90° bend uses equal legs from the bend along its two straight
     runs. ``radius`` optionally caps those legs in cells. The original path
     remains untouched; use an inflated grid when robot width matters.
     """
@@ -111,30 +159,7 @@ def smooth_path(grid, path, radius=None):
         route.append(path[index])
         index += 1
     route.append(path[-1])
-    turns = [index for index in range(1, len(route) - 1) if _turn(route, index)]
-    if len(turns) != 1:
-        return route
-    corner_index = turns[0]
-    before, corner, after = route[0], route[corner_index], route[-1]
-    incoming = (corner[0] - before[0], corner[1] - before[1])
-    outgoing = (after[0] - corner[0], after[1] - corner[1])
-    first_leg = hypot(*incoming)
-    second_leg = hypot(*outgoing)
-    if (not first_leg or not second_leg or incoming[0] * outgoing[0] + incoming[1] * outgoing[1] != 0
-            or not ((incoming[0] == 0 and outgoing[1] == 0)
-                    or (incoming[1] == 0 and outgoing[0] == 0))):
-        return route
-    leg = min(first_leg, second_leg, radius if radius is not None else float("inf"))
-    entry = (corner[0] - leg * incoming[0] / first_leg,
-             corner[1] - leg * incoming[1] / first_leg)
-    exit_point = (corner[0] + leg * outgoing[0] / second_leg,
-                  corner[1] + leg * outgoing[1] / second_leg)
-    candidate = [before, entry, exit_point, after]
-    if all(_clear(grid, a, b) for a, b in zip(candidate, candidate[1:])):
-        return [point for index, point in enumerate(candidate)
-                if index == 0 or hypot(point[0] - candidate[index - 1][0],
-                                       point[1] - candidate[index - 1][1]) > 1e-9]
-    return route
+    return _smooth_right_angles(grid, route, radius)
 
 
 def sample_waypoints(waypoints, step=0.8):

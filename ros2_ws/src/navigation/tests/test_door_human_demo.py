@@ -46,6 +46,14 @@ class DoorHumanDemoTest(unittest.TestCase):
                             for frame in frames))
         self.assertTrue(all(frame["trail"][-1] == frame["robot"] for frame in frames))
         first_trip = [frame for frame in frames if frame["trip"] == 1]
+        self.assertIn((20, 22), first_trip[-1]["trail"])
+        self.assertNotIn((42, 22), first_trip[-1]["trail"])
+        self.assertTrue(any(
+            before["robot"][0] < frame["robot"][0]
+            and before["robot"][1] > frame["robot"][1]
+            and 35 <= before["robot"][0] <= 42
+            for before, frame in zip(first_trip, first_trip[1:])
+        ))
         self.assertTrue(any(
             27 <= before["robot"][0] <= 35
             and before["robot"][0] != frame["robot"][0]
@@ -71,6 +79,9 @@ class DoorHumanDemoTest(unittest.TestCase):
         tunnel_plan = next(step for step in steps if step["tick"] == 21)
         self.assertIn([20, 22], tunnel_plan["turns_kept_in_waypoints"])
         self.assertNotIn([27, 22], tunnel_plan["turns_kept_in_waypoints"])
+        self.assertFalse(next(turn["full_45_shortcut_clear"]
+                              for turn in tunnel_plan["kept_turn_analysis"]
+                              if turn["point"] == [20, 22]))
         self.assertTrue(any(
             step["position_before"][0] != step["position_after"][0]
             and step["position_before"][1] != step["position_after"][1]
