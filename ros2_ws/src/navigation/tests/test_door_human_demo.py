@@ -38,6 +38,16 @@ class DoorHumanDemoTest(unittest.TestCase):
         self.assertTrue(all(frame["visible_people"].issubset(frame["visible_cells"])
                             for frame in frames))
         self.assertTrue(all(frame["trail"][-1] == frame["robot"] for frame in frames))
+        first_trip = [frame for frame in frames if frame["trip"] == 1]
+        self.assertTrue(any(
+            a["robot"][0] != b["robot"][0] and a["robot"][1] != b["robot"][1]
+            for a, b in zip(first_trip, first_trip[1:])
+        ))
+        self.assertTrue(all(
+            _clear(frame["grid"], before["robot"], frame["robot"])
+            for before, frame in zip(first_trip, first_trip[1:])
+            if before["robot"] != frame["robot"]
+        ))
         diagonal_trip = next(frame for frame in frames if frame["trip"] == 2)
         smoothed = diagonal_trip["waypoints"]
         actual_positions = [frame["robot"] for frame in frames if frame["trip"] == 2]

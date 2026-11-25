@@ -6,7 +6,7 @@ from math import sqrt
 from common.cell_attributes import CellAttributeMap, DOOR_BELIEF
 from common.inflate_map import inflate_map
 from common.path_manager import PathManager
-from common.path_smoothing import sample_waypoints
+from common.path_smoothing import _clear, sample_waypoints
 from common.special_obstacles import SpecialObstacles
 from common.temporal_traversability import TemporalTraversabilityLayer
 from ml.door_belief import DoorPredictor
@@ -158,8 +158,11 @@ def run_demo():
         robot = origin
         trail = [robot]
         waiting = 0
+        pending = []
+        active_path = []
+        active_waypoints = []
         for tick in range(140):
-            remaining = manager._remaining_path(robot)
+            remaining = active_path if pending else manager._remaining_path(robot)
             people = people_at(trip, tick)
             closed = (DOOR_GROUPS[(23, "upper")] | DOOR_GROUPS[(35, "upper")]
                       if trip == 1 and tick >= 19 else
@@ -179,22 +182,45 @@ def run_demo():
             dynamic = seen
             inflated, _ = inflate_map(observed_grid, inflation_cells=1,
                                       dynamic_obstacles=dynamic,
-                                      protected_points={robot})
+                                      protected_points={(round(robot[0]), round(robot[1]))})
             relevant_doors = closed.intersection(remaining)
-            assert inflated[robot[1]][robot[0]] < 50, (trip, tick, robot)
+            assert inflated[round(robot[1])][round(robot[0])] < 50, (trip, tick, robot)
             assert inflated[destination[1]][destination[0]] < 50
-            result = manager.plan(
-                inflated, robot, destination, attributes,
-                human_blocking=human_active,
-                human_distance=(abs(robot[0] - nearest_person[0]) + abs(robot[1] - nearest_person[1])
-                                if nearest_person is not None else SENSOR_RANGE + 1),
-                waiting_time=waiting,
-                human_cells={nearest_person} if human_active else None,
-                door_cells=relevant_doors or None,
-            )
+            if pending:
+                result = {"action": "MOVE", "path": active_path,
+                          "waypoints": active_waypoints}
+            else:
+                result = manager.plan(
+                    inflated, robot, destination, attributes,
+                    human_blocking=human_active,
+                    human_distance=(abs(robot[0] - nearest_person[0]) + abs(robot[1] - nearest_person[1])
+                                    if nearest_person is not None else SENSOR_RANGE + 1),
+                    waiting_time=waiting,
+                    human_cells={nearest_person} if human_active else None,
+                    door_cells=relevant_doors or None,
+                )
             previous = robot
             if result["action"] in ("MOVE", "REROUTE") and len(result["path"]) > 1:
-                robot = result["path"][1]
+                if not pending:
+                    waypoints = result["waypoints"]
+                    path = result["path"]
+                    if len(waypoints) > 1 and waypoints[1] != path[1]:
+                        rejoin = next((i for i, point in enumerate(waypoints[1:], 1)
+                                       if point in path[1:]), None)
+                        if rejoin is not None:
+                            pending = sample_waypoints(waypoints[:rejoin + 1])[1:]
+                            active_path, active_waypoints = path, waypoints
+                if pending:
+                    if _clear(inflated, robot, pending[0]) and all(
+                        (pending[0][0] - person[0]) ** 2 +
+                        (pending[0][1] - person[1]) ** 2 >= 1
+                        for person in people
+                    ):
+                        robot = pending.pop(0)
+                    else:
+                        result["action"] = "WAIT"
+                else:
+                    robot = result["path"][1]
             if robot != previous:
                 trail.append(robot)
             for group, cells in DOOR_GROUPS.items():
@@ -206,7 +232,8 @@ def run_demo():
                            "tick": tick, "trip": trip, "destination": destination,
                            "reroutes": manager.reroute_count, "crossings": len(crossings),
                            "combined": human_active and bool(relevant_doors),
-                           "grid": inflated, "raw_path": manager.raw_path(previous),
+                           "grid": inflated, "raw_path": manager.raw_path(previous)
+                           if not pending and previous in manager.current_path else manager.raw_path(),
                            "trail": list(trail), "people": people,
                            "visible_people": visible_people(robot, people, observed_grid),
                            "visible_cells": visible_map_cells(robot, observed_grid),
