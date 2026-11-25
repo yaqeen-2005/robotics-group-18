@@ -4,7 +4,7 @@ The input A* path is never changed. Each corner is checked against the occupancy
 grid independently; an unsafe corner keeps its original right-angle bend.
 """
 
-from math import hypot, sqrt
+from math import cos, hypot, radians, sin, sqrt
 
 
 def _clear(grid, start, end):
@@ -19,26 +19,49 @@ def _clear(grid, start, end):
     return True
 
 
-def _long_diagonal(grid, path, first, last):
-    start, end = path[first], path[last]
-    dx, dy = end[0] - start[0], end[1] - start[1]
-    if not dx or not dy or last - first < 6:
-        return None
-    if abs(dx) >= abs(dy):
-        projected = (end[0], start[1] + (1 if dy > 0 else -1) * abs(dx) / sqrt(3))
-        error = abs(projected[1] - end[1])
+def _turn(path, index):
+    before, current, after = path[index - 1:index + 2]
+    ax, ay = current[0] - before[0], current[1] - before[1]
+    bx, by = after[0] - current[0], after[1] - current[1]
+    cross = ax * by - ay * bx
+    return (cross > 0) - (cross < 0)
+
+
+def _ray_hit(origin, direction, start, end):
+    dx, dy = direction
+    if start[0] == end[0] and abs(dx) > 1e-9:
+        distance = (start[0] - origin[0]) / dx
+        point = (start[0], origin[1] + distance * dy)
+        inside = min(start[1], end[1]) - 1e-9 <= point[1] <= max(start[1], end[1]) + 1e-9
+    elif start[1] == end[1] and abs(dy) > 1e-9:
+        distance = (start[1] - origin[1]) / dy
+        point = (origin[0] + distance * dx, start[1])
+        inside = min(start[0], end[0]) - 1e-9 <= point[0] <= max(start[0], end[0]) + 1e-9
     else:
-        projected = (start[0] + (1 if dx > 0 else -1) * abs(dy) / sqrt(3), end[1])
-        error = abs(projected[0] - end[0])
-    if error > 0.45:
         return None
-    length = sqrt(dx * dx + dy * dy)
-    if any(abs(dx * (point[1] - start[1]) - dy * (point[0] - start[0])) / length > 2.1
-           for point in path[first + 1:last]):
-        return None
-    if _clear(grid, start, projected) and _clear(grid, projected, end):
-        return projected
-    return None
+    return (point, distance) if inside and distance > 2 else None
+
+
+def _zigzag_shortcut(grid, path, anchor):
+    origin = path[anchor]
+    best = None
+    for angle in range(0, 360, 30):
+        if angle % 90 == 0:
+            continue
+        direction = (cos(radians(angle)), sin(radians(angle)))
+        for index in range(anchor + 2, len(path) - 1):
+            hit = _ray_hit(origin, direction, path[index], path[index + 1])
+            if hit is None:
+                continue
+            point, distance = hit
+            original_length = index - anchor + hypot(point[0] - path[index][0], point[1] - path[index][1])
+            if original_length - distance < 0.5:
+                continue
+            if _clear(grid, origin, point) and _clear(grid, point, path[index + 1]):
+                candidate = (index, distance, point)
+                if best is None or candidate[:2] > best[:2]:
+                    best = candidate
+    return best
 
 
 def smooth_path(grid, path, radius=0.4):
@@ -52,18 +75,26 @@ def smooth_path(grid, path, radius=0.4):
     if len(path) < 3:
         return list(path)
     route = [path[0]]
-    index = 0
+    index = 1
+    last_turn = 0
     while index < len(path) - 1:
-        shortcut = None
-        for end in range(len(path) - 1, index + 5, -1):
-            shortcut = _long_diagonal(grid, path, index, end)
+        turn = _turn(path, index)
+        if turn and last_turn and turn != last_turn:
+            shortcut = _zigzag_shortcut(grid, path, index)
             if shortcut is not None:
-                route.extend((shortcut, path[end]))
-                index = end
-                break
-        if shortcut is None:
-            index += 1
-            route.append(path[index])
+                end, _, point = shortcut
+                route.append(path[index])
+                route.append(point)
+                if hypot(point[0] - path[end + 1][0], point[1] - path[end + 1][1]) > 1e-9:
+                    route.append(path[end + 1])
+                index = end + 2
+                last_turn = 0
+                continue
+        if turn:
+            last_turn = turn
+        route.append(path[index])
+        index += 1
+    route.append(path[-1])
     path = route
     output = [path[0]]
     first_length = (sqrt(3) - 1) / (sqrt(3) - 1 / sqrt(3))

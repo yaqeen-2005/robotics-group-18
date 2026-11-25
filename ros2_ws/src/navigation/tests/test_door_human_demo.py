@@ -28,9 +28,24 @@ class DoorHumanDemoTest(unittest.TestCase):
         self.assertTrue(any(position not in diagonal_trip["path"] for position in actual_positions))
         self.assertTrue(all(_clear(diagonal_trip["grid"], a, b)
                             for a, b in zip(actual_positions, actual_positions[1:])))
-        self.assertTrue(any(hypot(b[0] - a[0], b[1] - a[1]) > 15
-                            and abs(degrees(atan2(b[1] - a[1], b[0] - a[0])) - 30) < 0.01
-                            for a, b in zip(smoothed, smoothed[1:])))
+        long_segments = [(a, b) for a, b in zip(smoothed, smoothed[1:])
+                         if hypot(b[0] - a[0], b[1] - a[1]) > 10]
+        self.assertEqual(len(long_segments), 1)
+        anchor, hit = long_segments[0]
+        self.assertIn(anchor, diagonal_trip["path"])
+        self.assertNotEqual(anchor, diagonal_trip["path"][0])
+        self.assertAlmostEqual(degrees(atan2(hit[1] - anchor[1], hit[0] - anchor[0])), 30)
+        self.assertTrue(any(
+            a[0] == b[0] == hit[0] and min(a[1], b[1]) <= hit[1] <= max(a[1], b[1])
+            or a[1] == b[1] == hit[1] and min(a[0], b[0]) <= hit[0] <= max(a[0], b[0])
+            for a, b in zip(diagonal_trip["path"], diagonal_trip["path"][1:])
+        ))
+        self.assertGreater(sum(anchor[0] < x < hit[0] for x, y in actual_positions), 10)
+        self.assertTrue(all(
+            abs((x - anchor[0]) * (hit[1] - anchor[1])
+                - (y - anchor[1]) * (hit[0] - anchor[0])) < 1e-6
+            for x, y in actual_positions if anchor[0] < x < hit[0]
+        ))
         self.assertTrue(all(_clear(diagonal_trip["grid"], a, b)
                             for a, b in zip(smoothed, smoothed[1:])))
         self.assertTrue(any(

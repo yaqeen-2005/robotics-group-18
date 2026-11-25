@@ -48,7 +48,7 @@ def make_map():
     for x in range(44, WIDTH - 1):
         centre_y = 10 + (x - GOAL[0]) / sqrt(3)
         for y in range(1, HEIGHT - 1):
-            if abs(y - centre_y) > 2.2:
+            if abs(y - centre_y) > 3.2:
                 grid[y][x] = 100
     return grid
 
@@ -75,7 +75,10 @@ def run_demo():
         manager = PathManager(special_obstacles=SpecialObstacles(door_distance=4))
         if trip == 2:
             inflated, _ = inflate_map(grid, inflation_cells=1, protected_points={origin})
-            result = manager.plan(inflated, origin, destination, attributes)
+            # This task intentionally allows A*'s natural grid staircase so
+            # the turn-reversal shortcut can be seen and tested clearly.
+            result = manager.plan(inflated, origin, destination, attributes,
+                                  weights={"turn": 0.0})
             for tick, position in enumerate(sample_waypoints(result["waypoints"])):
                 frames.append({"robot": position, "path": result["path"],
                                "waypoints": result["waypoints"], "action": "MOVE",

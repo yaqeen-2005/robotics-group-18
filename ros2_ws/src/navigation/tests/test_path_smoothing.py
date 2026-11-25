@@ -37,6 +37,13 @@ class PathSmoothingTest(unittest.TestCase):
         self.assertEqual(positions[0], path[0])
         self.assertEqual(positions[-1], path[-1])
         self.assertTrue(all(_clear(grid, a, b) for a, b in zip(positions, positions[1:])))
+        rotated = [(y, x) for x, y in path]
+        rotated_result = smooth_path([[0] * 12 for _ in range(16)], rotated)
+        self.assertTrue(any(
+            math.hypot(b[0] - a[0], b[1] - a[1]) > 4
+            and abs(math.degrees(math.atan2(b[1] - a[1], b[0] - a[0])) - 60) < 0.01
+            for a, b in zip(rotated_result, rotated_result[1:])
+        ))
         grid[3][4] = 100
         blocked_result = smooth_path(grid, path)
         self.assertTrue(all(_clear(grid, a, b) for a, b in zip(blocked_result, blocked_result[1:])))
