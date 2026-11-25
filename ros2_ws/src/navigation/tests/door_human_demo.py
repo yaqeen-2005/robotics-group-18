@@ -1,10 +1,13 @@
 """Simulate warehouse observations while the navigation modules choose each route."""
 
 import argparse
+import json
 from math import sqrt
+from pathlib import Path
 
 from common.cell_attributes import CellAttributeMap, DOOR_BELIEF
 from common.live_navigator import LiveNavigator
+from common.path_smoothing import _zigzag_shortcut
 from common.temporal_traversability import TemporalTraversabilityLayer
 from ml.door_belief import DoorPredictor
 
@@ -127,11 +130,13 @@ def run_demo():
             result = navigator.step(observed_grid, seen, closed, attributes)
             robot = result["robot"]
             for group, cells in DOOR_GROUPS.items():
-                if previous not in cells and robot in cells:
+                if ((round(previous[0]), round(previous[1])) not in cells
+                        and (round(robot[0]), round(robot[1])) in cells):
                     crossings.append((trip, group))
-            frames.append({**result, "closed": closed,
+            frames.append({**result, "closed": closed, "previous_robot": previous,
                            "tick": tick, "trip": trip, "destination": destination,
                            "crossings": len(crossings), "people": people,
+                           "observed_people": seen,
                            "visible_people": visible_people(robot, people, observed_grid),
                            "visible_cells": visible_map_cells(robot, observed_grid),
                            "world": observed_grid})
@@ -140,6 +145,64 @@ def run_demo():
         if robot != destination:
             raise RuntimeError(f"trip {trip} stalled at {robot}: {[(f['robot'], f['action']) for f in frames[-5:]]}")
     return grid, frames, belief
+
+
+def save_debug_paths(frames, output, trip=1):
+    """Save the actual A*, smoothing, and executed positions from this run."""
+    def same_direction(a, b):
+        return a[0] * b[1] == a[1] * b[0] and a[0] * b[0] + a[1] * b[1] > 0
+
+    selected = [frame for frame in frames if trip == 0 or frame["trip"] == trip]
+    if not selected:
+        raise ValueError(f"no frames for trip {trip}")
+    steps = []
+    for frame in selected:
+        path = frame["path"]
+        turn_indices = [index for index in range(1, len(path) - 1)
+                        if (path[index][0] - path[index - 1][0],
+                            path[index][1] - path[index - 1][1]) !=
+                        (path[index + 1][0] - path[index][0],
+                         path[index + 1][1] - path[index][1])]
+        turns = [path[index] for index in turn_indices]
+        kept = []
+        for index in turn_indices:
+            if path[index] not in frame["waypoints"]:
+                continue
+            waypoint_index = frame["waypoints"].index(path[index])
+            if not 0 < waypoint_index < len(frame["waypoints"]) - 1:
+                continue
+            before, corner, after = frame["waypoints"][waypoint_index - 1:waypoint_index + 2]
+            if (same_direction((corner[0] - before[0], corner[1] - before[1]),
+                               (path[index][0] - path[index - 1][0],
+                                path[index][1] - path[index - 1][1]))
+                    and same_direction((after[0] - corner[0], after[1] - corner[1]),
+                                       (path[index + 1][0] - path[index][0],
+                                        path[index + 1][1] - path[index][1]))):
+                kept.append(index)
+        steps.append({
+            "trip": frame["trip"], "tick": frame["tick"],
+            "planned_this_tick": frame["planned"], "action": frame["action"],
+            "position_before": frame["previous_robot"],
+            "position_after": frame["robot"],
+            "astar_path": path,
+            "smoothed_waypoints": frame["waypoints"],
+            "raw_turns": turns,
+            "turns_kept_in_waypoints": [path[index] for index in kept],
+            "kept_turn_analysis": [
+                {"point": path[index],
+                 "safe_30_or_60_shortcut_from_here":
+                     _zigzag_shortcut(frame["grid"], path, index) is not None,
+                 "single_turn_45_rule_applies": len(turn_indices) == 1}
+                for index in kept
+            ],
+            "observed_people": sorted(frame["observed_people"]),
+            "closed_doors": sorted(frame["closed"]),
+        })
+    output = Path(output)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(json.dumps({"description": "A* route, smoothed output, and actual robot step",
+                                  "trip": trip, "steps": steps}, indent=2), encoding="utf-8")
+    return output
 
 
 def show_demo(grid, frames, belief, output=None):
@@ -232,9 +295,17 @@ def show_demo(grid, frames, belief, output=None):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--save-gif")
+    parser.add_argument("--debug-paths", nargs="?", const=".runtime/door_human_paths.json",
+                        metavar="FILE", help="write routes and actual positions to JSON")
+    parser.add_argument("--debug-trip", type=int, choices=range(5), default=1,
+                        help="trip 1-4 to include in debug JSON; 0 includes all (default: 1)")
+    parser.add_argument("--show", action="store_true", help="also open the animation window")
     args = parser.parse_args()
     grid, frames, belief = run_demo()
     print(f"frames={len(frames)} belief={belief:.3f} door_crossings={frames[-1]['crossings']} "
           f"waits={sum(frame['action'] == 'WAIT' for frame in frames)} "
           f"reroutes={sum(frame['action'] == 'REROUTE' for frame in frames)}")
-    show_demo(grid, frames, belief, args.save_gif)
+    if args.debug_paths:
+        print(f"debug_paths={save_debug_paths(frames, args.debug_paths, args.debug_trip)}")
+    if args.save_gif or args.show or not args.debug_paths:
+        show_demo(grid, frames, belief, args.save_gif)

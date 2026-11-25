@@ -24,7 +24,11 @@ class LiveNavigator:
         observed_people = set(observed_people)
         closed_cells = set(closed_cells)
         remaining = self.active_path if self.pending else self.manager._remaining_path(robot)
-        blocking_people = observed_people.intersection(remaining[1:])
+        blocking_people = {
+            person for person in observed_people
+            if any((point[0] - person[0]) ** 2 + (point[1] - person[1]) ** 2 <= 1
+                   for point in remaining[1:])
+        }
         nearest = min(blocking_people,
                       key=lambda point: abs(robot[0] - point[0]) + abs(robot[1] - point[1]),
                       default=None)
@@ -55,6 +59,20 @@ class LiveNavigator:
                 door_cells=relevant_doors or None,
             )
             planned = True
+            if result["action"] in ("MOVE", "REROUTE") and result["path"]:
+                previous_route_matches = (
+                    robot in self.active_path
+                    and self.active_path[self.active_path.index(robot):] == result["path"]
+                    and robot in self.active_waypoints
+                    and result["action"] != "REROUTE"
+                )
+                if previous_route_matches:
+                    result["waypoints"] = self.active_waypoints[
+                        self.active_waypoints.index(robot):
+                    ]
+                else:
+                    self.active_path = result["path"]
+                    self.active_waypoints = result["waypoints"]
 
         previous = robot
         if result["action"] in ("MOVE", "REROUTE") and len(result["path"]) > 1:
@@ -65,7 +83,6 @@ class LiveNavigator:
                                    if point in path[1:]), None)
                     if rejoin is not None:
                         self.pending = sample_waypoints(waypoints[:rejoin + 1])[1:]
-                        self.active_path, self.active_waypoints = path, waypoints
             if self.pending:
                 next_position = self.pending[0]
                 if _clear(inflated, robot, next_position) and all(

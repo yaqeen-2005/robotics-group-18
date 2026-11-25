@@ -1,9 +1,12 @@
+import json
+import tempfile
 import unittest
 from math import hypot
+from pathlib import Path
 
 from tests.door_human_demo import (
     CORNER_GOAL, DIAGONAL_GOAL, GOAL, PERSON, START, DOOR_GROUPS,
-    in_range, line_of_sight, make_map, people_at, run_demo,
+    in_range, line_of_sight, make_map, people_at, run_demo, save_debug_paths,
 )
 from common.path_smoothing import _clear
 
@@ -42,6 +45,13 @@ class DoorHumanDemoTest(unittest.TestCase):
         self.assertTrue(all(frame["visible_people"].issubset(frame["visible_cells"])
                             for frame in frames))
         self.assertTrue(all(frame["trail"][-1] == frame["robot"] for frame in frames))
+        first_trip = [frame for frame in frames if frame["trip"] == 1]
+        self.assertTrue(any(
+            27 <= before["robot"][0] <= 35
+            and before["robot"][0] != frame["robot"][0]
+            and before["robot"][1] != frame["robot"][1]
+            for before, frame in zip(first_trip, first_trip[1:])
+        ))
         for trip in (2, 3):
             trip_frames = [frame for frame in frames if frame["trip"] == trip]
             self.assertTrue(any(
@@ -49,6 +59,23 @@ class DoorHumanDemoTest(unittest.TestCase):
                 for frame in trip_frames for a, b in zip(frame["waypoints"], frame["waypoints"][1:])
                 if a[0] != b[0] and a[1] != b[1]
             ))
+
+    def test_debug_paths_record_planned_and_executed_routes(self):
+        _, frames, _ = run_demo()
+        with tempfile.TemporaryDirectory() as directory:
+            report = save_debug_paths(frames, Path(directory) / "paths.json")
+            steps = json.loads(report.read_text(encoding="utf-8"))["steps"]
+        first_trip = [frame for frame in frames if frame["trip"] == 1]
+        self.assertEqual(len(steps), len(first_trip))
+        self.assertEqual(steps[0]["astar_path"], [list(point) for point in first_trip[0]["path"]])
+        tunnel_plan = next(step for step in steps if step["tick"] == 21)
+        self.assertIn([20, 22], tunnel_plan["turns_kept_in_waypoints"])
+        self.assertNotIn([27, 22], tunnel_plan["turns_kept_in_waypoints"])
+        self.assertTrue(any(
+            step["position_before"][0] != step["position_after"][0]
+            and step["position_before"][1] != step["position_after"][1]
+            for step in steps
+        ))
 
     def test_closed_door_hides_a_person_inside_sensor_radius(self):
         grid = make_map()

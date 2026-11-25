@@ -48,6 +48,14 @@ The separate attribute file accepts legacy `ATTRIBUTES v2 <width> <height> 4` an
 
 Show the combined person and door demonstration with `python -m tests.door_human_demo`, or export it with `python -m tests.door_human_demo --save-gif door_human_demo.gif`. All four transport legs use the same `LiveNavigator`: the demo supplies the map, destinations, moving people, and door states; `PathManager` chooses routes with its default weights. Grid steps trigger a fresh planning call, while an active smoothed segment checks every intermediate position against the current inflated map and observed people before planning resumes at its grid rejoin point. The gray dashed line comes from `PathManager.raw_path()` and shows the unsmoothed A* route; the green line contains only positions the simulated robot has actually reached. The blue circle is its sensor range. People move between cells; those outside range are gray, those inside range but behind walls or closed doors are hidden, and only directly observed people are red. The occupancy display is grayed out outside line of sight, including behind walls. The outbound trip waits for a person and reroutes through lower doors. The slanted corridor produces long smoothed shortcuts in both directions, and the final single-corner trip produces a collision-checked 45° hypotenuse. The door counter records four actual gate crossings.
 
+Inspect the first transport leg without opening the animation window:
+
+```bash
+python -m tests.door_human_demo --debug-paths
+```
+
+This writes `.runtime/door_human_paths.json`. Each tick records the A* grid path, smoothed waypoints, raw turns, right-angle turns still present after smoothing, observed people, door states, and the robot positions before and after the actual move. For each retained turn, the report says whether an eligible collision-free 30°/60° shortcut starts there and whether the single-turn 45° rule applies. Use `--debug-trip 0` for all four legs or `--debug-paths output.json` to choose a file. Add `--show` to display the animation as well. The navigation executor retains a validated shortcut across grid updates, so the two safe 60° transitions in the first leg are executed instead of being lost when the next A* path begins at a turn.
+
 The A* cost combines distance, the original risk attributes, and, when present, door belief multiplied by observed block rate. A repeated cell can also incur a separate cost. Default weights are defined at the top of `astar/a_star.py`; optional profiles can override them. The synthetic door experiment is in `ml/weights/special_navigation.json`.
 
 Display the map and all four attribute layers:
