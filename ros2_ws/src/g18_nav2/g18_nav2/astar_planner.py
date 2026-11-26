@@ -212,26 +212,35 @@ class AStarPlanner(Node):
         self.get_logger().info(f'A*: {len(cells)} cells on a {w}x{h} grid in '
                                f'{time.monotonic() - t0:.2f} s (clearance {clearance:.2f} m, '
                                f'corner radius {self.corner_radius:.2f} m)')
-        cells = self.shortcut(cells, ~tight & ~unknown)
+        cells = self.shortcut(cells, ~tight & ~unknown, ~blocked & ~unknown)
         return self.to_path(cells, ox + lo_x * res, oy + lo_y * res, cell, goal_pose)
 
     @staticmethod
-    def shortcut(cells, roomy):
+    def shortcut(cells, roomy, passable):
         """Greedy line-of-sight smoothing: from each kept cell jump to the farthest
-        later cell whose straight segment stays on `roomy` (corner-clear, known) cells."""
-        def clear(a, b):
+        later cell whose straight segment stays on `roomy` cells (corners clear).
+        Where no roomy segment exists (a corridor narrower than the corner radius),
+        fall back to `passable` cells (body clear) so no 0.2 m staircase is left."""
+        def clear(a, b, ok):
             n = max(abs(b[0] - a[0]), abs(b[1] - a[1]), 1) * 2
             for i in range(n + 1):
                 x = round(a[0] + (b[0] - a[0]) * i / n)
                 y = round(a[1] + (b[1] - a[1]) * i / n)
-                if not roomy[y, x]:
+                if not ok[y, x]:
                     return False
             return True
+
+        def farthest(i, ok):
+            j = len(cells) - 1
+            while j > i + 1 and not clear(cells[i], cells[j], ok):
+                j -= 1
+            return j
+
         out, i = [cells[0]], 0
         while i < len(cells) - 1:
-            j = len(cells) - 1
-            while j > i + 1 and not clear(cells[i], cells[j]):
-                j -= 1
+            j = farthest(i, roomy)
+            if j == i + 1:                 # no roomy segment: accept body clearance
+                j = farthest(i, passable)
             out.append(cells[j])
             i = j
         return out
