@@ -32,7 +32,8 @@ def main() -> None:
     attributes = load_cell_attributes(args.attributes, len(grid[0]), len(grid))
     display = [[1 if cell < 0 or cell >= 50 else 0 for cell in row] for row in grid]
     panel_count = len(ATTRIBUTE_NAMES) + 1
-    figure, axes = plt.subplots(1, panel_count, figsize=(4 * panel_count, 4))
+    figure, axes = plt.subplots(4, 3, figsize=(15, 15))
+    axes = axes.flatten()
     axes[0].imshow(display, cmap=ListedColormap(["white", "black"]))
     axes[0].scatter(*start, color="limegreen", label="Start")
     axes[0].scatter(*goal, color="red", label="Goal")
@@ -41,15 +42,19 @@ def main() -> None:
 
     for dimension, name in enumerate(ATTRIBUTE_NAMES):
         image = axes[dimension + 1].imshow(
-            attributes.layer(dimension), cmap="viridis", vmin=0.0, vmax=1.0
+            attributes.layer(dimension), cmap="viridis",
+            vmin=-1.0 if name == "last_state" else 0.0,
+            vmax=None if name in ("observation_count", "block_count", "switch_count") else 1.0,
         )
         axes[dimension + 1].set_title(name.replace("_", " ").title())
         figure.colorbar(image, ax=axes[dimension + 1])
 
-    for axis in axes:
+    for axis in list(axes)[:panel_count]:
         axis.set_xticks(range(len(grid[0])))
         axis.set_yticks(range(len(grid)))
         axis.grid(color="lightgray", linewidth=0.5)
+    for axis in list(axes)[panel_count:]:
+        axis.axis("off")
     figure.tight_layout()
     plt.show()
 

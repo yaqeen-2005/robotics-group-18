@@ -16,9 +16,10 @@ TEMPLATES = {
     "large_aisles_mixed_busy": (24, 16, "aisles", "high", "high", "high"),
     "small_bottleneck_busy": (16, 10, "bottleneck", "high", "high", "high"),
     "large_bottleneck_uncertain": (24, 16, "bottleneck", "high", "high", "low"),
+    "training_factory_busy": (40, 30, "aisles", "very_high", "high", "high"),
 }
 
-TRAJECTORY_COUNTS = {"low": 2, "high": 8}
+TRAJECTORY_COUNTS = {"low": 2, "high": 8, "very_high": 20}
 
 
 def make_layout(width: int, height: int, layout: str, rng: random.Random):

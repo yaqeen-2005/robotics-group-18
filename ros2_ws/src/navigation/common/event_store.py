@@ -64,6 +64,17 @@ class EventStore:
                     )
                     """
                 )
+                connection.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS event_consumers (
+                        consumer TEXT NOT NULL,
+                        event_id TEXT NOT NULL,
+                        processed_at TEXT NOT NULL,
+                        PRIMARY KEY (consumer, event_id),
+                        FOREIGN KEY (event_id) REFERENCES events(event_id)
+                    )
+                    """
+                )
 
     def record_event(
         self,
@@ -130,6 +141,44 @@ class EventStore:
             task_id=task_id,
         )
 
+    def record_human_detection(
+        self,
+        robot_id,
+        run_id,
+        map_id,
+        position_xy,
+        *,
+        distance=None,
+        task_id=None,
+    ):
+        """Sensor-facing helper for recording a person in map coordinates."""
+        details = {"distance": float(distance)} if distance is not None else None
+        return self.record_event(
+            HUMAN_DETECTED,
+            robot_id,
+            run_id,
+            map_id,
+            point(*position_xy),
+            task_id=task_id,
+            details=details,
+        )
+
+    def annotate_event(self, event_id, **details):
+        """Add a navigation decision such as WAIT or REROUTE to an event."""
+        with closing(sqlite3.connect(self.database)) as connection:
+            row = connection.execute(
+                "SELECT details FROM events WHERE event_id = ?", (event_id,)
+            ).fetchone()
+            if row is None:
+                raise KeyError(f"unknown event_id: {event_id}")
+            merged = json.loads(row[0]) if row[0] else {}
+            merged.update(details)
+            with connection:
+                connection.execute(
+                    "UPDATE events SET details = ? WHERE event_id = ?",
+                    (json.dumps(merged, separators=(",", ":")), event_id),
+                )
+
     def read_events(self) -> list[dict]:
         with closing(sqlite3.connect(self.database)) as connection:
             connection.row_factory = sqlite3.Row
@@ -139,3 +188,41 @@ class EventStore:
             event["position"] = json.loads(event["position"])
             event["details"] = json.loads(event["details"]) if event["details"] else None
         return events
+
+    def read_unprocessed_events(self, consumer, map_id=None):
+        """Read events not yet consumed by one named downstream component."""
+        query = """
+            SELECT events.* FROM events
+            LEFT JOIN event_consumers
+              ON event_consumers.event_id = events.event_id
+             AND event_consumers.consumer = ?
+            WHERE event_consumers.event_id IS NULL
+        """
+        parameters = [consumer]
+        if map_id is not None:
+            query += " AND events.map_id = ?"
+            parameters.append(map_id)
+        query += " ORDER BY events.timestamp"
+        with closing(sqlite3.connect(self.database)) as connection:
+            connection.row_factory = sqlite3.Row
+            rows = connection.execute(query, parameters).fetchall()
+        events = [dict(row) for row in rows]
+        for event in events:
+            event["position"] = json.loads(event["position"])
+            event["details"] = json.loads(event["details"]) if event["details"] else None
+        return events
+
+    def mark_events_processed(self, consumer, event_ids):
+        if not event_ids:
+            return
+        processed_at = datetime.now(timezone.utc).isoformat()
+        with closing(sqlite3.connect(self.database)) as connection:
+            with connection:
+                connection.executemany(
+                    """
+                    INSERT OR IGNORE INTO event_consumers
+                        (consumer, event_id, processed_at)
+                    VALUES (?, ?, ?)
+                    """,
+                    [(consumer, event_id, processed_at) for event_id in event_ids],
+                )

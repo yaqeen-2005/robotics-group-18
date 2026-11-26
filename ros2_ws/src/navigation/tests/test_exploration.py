@@ -1,4 +1,5 @@
 import unittest
+import math
 
 from common.cell_attributes import CellAttributeMap
 from exploration.frontier_explorer import FrontierExplorer
@@ -35,6 +36,17 @@ class FrontierExplorerTest(unittest.TestCase):
         explorer.update_map(grid, attributes_for(grid))
         explorer.update_position((0, 0))
         self.assertEqual(explorer.next_move((3, 0))["target"], (2, 0))
+
+    def test_next_move_reports_heading_and_turn(self):
+        grid = [[0, 0], [0, 0]]
+        explorer = FrontierExplorer()
+        explorer.update_map(grid, attributes_for(grid))
+        explorer.update_position((0, 1), yaw=0.0)
+
+        move = explorer.next_move((0, 0))
+
+        self.assertAlmostEqual(move["heading_rad"], -math.pi / 2)
+        self.assertAlmostEqual(move["turn_rad"], -math.pi / 2)
 
 
 if __name__ == "__main__":

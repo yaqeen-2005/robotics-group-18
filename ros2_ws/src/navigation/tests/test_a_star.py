@@ -45,6 +45,27 @@ class AStarTest(unittest.TestCase):
 
         self.assertNotIn((1, 1), path)
 
+    def test_turn_weight_can_prefer_a_longer_straighter_path(self) -> None:
+        grid = [
+            [100, 100, 100, 100, 100, 100, 100],
+            [100, 0, 0, 0, 100, 100, 100],
+            [0, 0, 100, 0, 0, 0, 0],
+            [0, 100, 100, 100, 100, 100, 0],
+            [0, 0, 0, 0, 0, 0, 0],
+        ]
+
+        shortest = plan_path(grid, (0, 2), (6, 2), weights={"turn": 0.0})
+        straighter = plan_path(grid, (0, 2), (6, 2), weights={"turn": 2.0})
+
+        self.assertLess(len(shortest), len(straighter))
+        self.assertIn((3, 1), shortest)
+        self.assertIn((3, 4), straighter)
+
+    def test_temporarily_blocked_cells_are_avoided(self) -> None:
+        grid = [[0, 0, 0], [0, 0, 0]]
+        path = plan_path(grid, (0, 0), (2, 0), blocked_cells={(1, 0)})
+        self.assertNotIn((1, 0), path)
+
 
 if __name__ == "__main__":
     unittest.main()
