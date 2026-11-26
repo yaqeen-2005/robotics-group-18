@@ -2,11 +2,13 @@
 import math
 from controller import Robot, Keyboard
 from lidar import LidarSensor
+from lidar_visualiser import LidarVisualiser
 
 robot = Robot()
 step_ms = int(robot.getBasicTimeStep())
 dt = step_ms / 1000.0
 lidar = LidarSensor(robot, step_ms)
+visualiser = LidarVisualiser()
 
 keyboard = robot.getKeyboard()
 keyboard.enable(step_ms)
@@ -128,4 +130,6 @@ while robot.step(step_ms) != -1:
                 y = scan[i] * math.sin(angle)
 
                 print(f"Index {i}: X: {x:.3f} m, Y: {y:.3f} m")
-                
+    if ord('P') in pressed:
+        points = lidar.get_points(scan)
+        visualiser.show_scan(points)
