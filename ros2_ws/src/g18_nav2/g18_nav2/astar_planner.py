@@ -169,8 +169,12 @@ class AStarPlanner(Node):
         # Cells closer to an obstacle than the body (or pallet) half-width are blocked.
         clearance = self.half_width + self.padding
         dist = ndimage.distance_transform_edt(~lethal) * cell
-        blocked = dist < clearance
-        tight = dist < self.corner_radius + self.padding     # corners could touch when turning
+        # dist is measured between coarse cell centres, so the real gap can be up to
+        # half a cell narrower. Without this margin a 1.95 m doorway (CART) looked
+        # wide enough for the 1.8 m pallet, which needs 2.0 m.
+        quant = cell / 2.0
+        blocked = dist < clearance + quant
+        tight = dist < self.corner_radius + self.padding + quant   # corners could touch when turning
 
         def to_cell(x, y):
             return int((x - ox) / res - lo_x) // k, int((y - oy) / res - lo_y) // k
