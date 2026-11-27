@@ -21,3 +21,4 @@ class LidarVisualiser:
         plt.legend()
 
         plt.show()
+        plt.close()
