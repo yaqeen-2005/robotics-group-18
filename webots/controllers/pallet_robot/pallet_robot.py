@@ -3,6 +3,7 @@ import math
 from controller import Robot, Keyboard
 from lidar import LidarSensor
 from lidar_visualiser import LidarVisualiser
+from odometry import WheelOdometry
 
 robot = Robot()
 step_ms = int(robot.getBasicTimeStep())
@@ -31,6 +32,7 @@ for stage in lift_stages:
 
 RADIUS = 0.15
 TRACK = 0.82
+odometry = WheelOdometry(RADIUS,TRACK)
 lift_target = 0.0
 previous = None
 stopped_for = 0.0
@@ -42,12 +44,15 @@ print('Click the 3D view. Hold W/S: forward/reverse, A/D: turn. Space: stop.')
 print('After stopping, hold U/J: raise/lower; release to hold height. Space stops both.')
 print('Lift travel blocks driving. R: print lift position.')
 print('Print LiDAR Data: L.')
+print('Show LiDAR Visualisation: P.')
+print("Print Wheel Odometry: O.")
 print('Manual prototype: no attachment, obstacle stop or autonomous controller is active.')
 
 while robot.step(step_ms) != -1:
     now = robot.getTime()
     scan = lidar.get_scan()
     angles = [s.getValue() for s in encoders]
+    odometry.update(angles[0], angles[1], now)
     valid = all(math.isfinite(x) for x in angles)
     wheel_speed = float('inf')
     if valid and previous is not None:
@@ -133,3 +138,15 @@ while robot.step(step_ms) != -1:
     if ord('P') in pressed:
         points = lidar.get_points(scan)
         visualiser.show_scan(points)
+    if ord('O') in pressed:
+        x, y, theta = odometry.get_pose()
+        v, w = odometry.get_velocity()
+
+        print("----- Wheel Odometry -----")
+        print(f"Left encoder: {angles[0]:.3f} rad")
+        print(f"Right encoder: {angles[1]:.3f} rad")
+        print(f"X: {x:.3f} m")
+        print(f"Y: {y:.3f} m")
+        print(f"Heading: {math.degrees(theta):.2f} degrees")
+        print(f"Linear velocity: {v:.3f} m/s")
+        print(f"Angular velocity: {w:.3f} rad/s")
