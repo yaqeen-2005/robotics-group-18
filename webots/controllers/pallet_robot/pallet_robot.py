@@ -6,6 +6,7 @@ from lidar_visualiser import LidarVisualiser
 from odometry import WheelOdometry
 from odometry_visualiser import OdometryVisualiser
 import matplotlib.pyplot as plt
+from sensor_interface import SensorInterface
 
 
 robot = Robot()
@@ -38,6 +39,14 @@ TRACK = 0.82
 odom_track = 0.911
 odometry = WheelOdometry(RADIUS,odom_track)
 odometry_visualiser = OdometryVisualiser()
+
+sensors = SensorInterface(
+    lidar.resolution,
+    lidar.fov,
+    lidar.lidar.getMinRange(),
+    lidar.lidar.getMaxRange()
+)
+
 lift_target = 0.0
 previous = None
 stopped_for = 0.0
@@ -52,13 +61,18 @@ print('Print LiDAR Data: L.')
 print('Show LiDAR Visualisation: P.')
 print("Print Wheel Odometry: O.")
 print("Show Odometry Trajectory: T.")
+print("Print SLAM Sensor Frame: K.")
 print('Manual prototype: no attachment, obstacle stop or autonomous controller is active.')
 
 while robot.step(step_ms) != -1:
     now = robot.getTime()
     scan = lidar.get_scan()
     angles = [s.getValue() for s in encoders]
-    odometry.update(angles[0], angles[1], now)
+    odom_updated = odometry.update(angles[0], angles[1], now)
+
+    sensor_frame = sensors.capture(
+        now, scan, odometry, odom_updated
+    )
     odometry_visualiser.update(odometry.get_pose())
     valid = all(math.isfinite(x) for x in angles)
     wheel_speed = float('inf')
@@ -160,3 +174,12 @@ while robot.step(step_ms) != -1:
         odometry_visualiser.show_trajectory()
     if plt.get_fignums():
         plt.pause(0.001)
+    if ord('K') in pressed and sensor_frame is not None:
+        print("----- SLAM Sensor Frame -----")
+        print(f"Time: {sensor_frame.time_s:.2f} s")
+        print(f"Scan readings: {len(sensor_frame.ranges_m)}")
+        print(f"Detected points: {len(sensor_frame.points_base_m)}")
+        print(f"Pose: {sensor_frame.odom_pose}")
+        print(f"Velocity: {sensor_frame.velocity}")
+        print(f"LiDAR offset: {sensor_frame.lidar_offset_m}")
+    
