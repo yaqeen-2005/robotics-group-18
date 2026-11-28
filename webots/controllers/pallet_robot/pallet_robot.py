@@ -7,6 +7,8 @@ from odometry import WheelOdometry
 from odometry_visualiser import OdometryVisualiser
 import matplotlib.pyplot as plt
 from sensor_interface import SensorInterface
+from motion_controller import MotionController
+from cargo_profiles import CARGO_PROFILES
 
 
 robot = Robot()
@@ -39,6 +41,14 @@ TRACK = 0.82
 odom_track = 0.911
 odometry = WheelOdometry(RADIUS,odom_track)
 odometry_visualiser = OdometryVisualiser()
+motion = MotionController("empty")
+
+profile_keys = {
+    ord("Z"): "empty",
+    ord("X"): "standard",
+    ord("C"): "wide",
+    ord("Q"): "fragile"
+}
 
 sensors = SensorInterface(
     lidar.resolution,
@@ -62,6 +72,8 @@ print('Show LiDAR Visualisation: P.')
 print("Print Wheel Odometry: O.")
 print("Show Odometry Trajectory: T.")
 print("Print SLAM Sensor Frame: K.")
+print("Cargo profiles: Z - Empty, X - Standard, C - Wide, Q - Fragile.")
+print("Print Motion Controller Data: M.")
 print('Manual prototype: no attachment, obstacle stop or autonomous controller is active.')
 
 while robot.step(step_ms) != -1:
@@ -106,7 +118,9 @@ while robot.step(step_ms) != -1:
     lift_direction = (ord('U') in keys) - (ord('J') in keys)
     jog_allowed = (lift_direction != 0 and ord(' ') not in keys
                    and stopped_for >= 0.4 and command == (0.0, 0.0)
-                   and math.isfinite(position))
+                   and math.isfinite(position)
+                   and motion.command == (0.0,0.0)
+                   )
     if jog_allowed:
         lift_target = 0.60 if lift_direction > 0 else 0.0
         lift.setPosition(lift_target)
@@ -123,7 +137,28 @@ while robot.step(step_ms) != -1:
     if moving_lift:
         command = (0.0, 0.0)
         last_drive_time = -1.0
-    v, yaw = command
+
+    for key, profile in profile_keys.items():
+        if key in pressed:
+            if (
+                stopped_for >= 0.4
+                and command == (0.0, 0.0)
+                and motion.command == (0.0, 0.0)
+                and not moving_lift
+                and not any(ord(k) in keys for k in "WSADUJ")
+            ):
+                motion.set_profile(profile)
+                print(f"Cargo profile: {profile.upper()}")
+            else:
+                print("Stop the robot before changing cargo profile.")
+
+    if ord(' ') in keys or moving_lift or not valid:
+        v, yaw = motion.stop()
+        command = (0.0, 0.0)
+        last_drive_time = -1.0
+    else:
+        v, yaw = motion.update(command[0], command[1], dt)
+    
     left.setVelocity((v-yaw*TRACK/2)/RADIUS)
     right.setVelocity((v+yaw*TRACK/2)/RADIUS)
     if ord('R') in pressed:
@@ -182,4 +217,19 @@ while robot.step(step_ms) != -1:
         print(f"Pose: {sensor_frame.odom_pose}")
         print(f"Velocity: {sensor_frame.velocity}")
         print(f"LiDAR offset: {sensor_frame.lidar_offset_m}")
-    
+    if ord('M') in pressed:
+        profile = CARGO_PROFILES[motion.profile_name]
+        cmd_v, cmd_w = motion.command
+        actual_v, actual_w = odometry.get_velocity()
+
+        print("----- Cargo Motion Control -----")
+        print(f"Profile: {motion.profile_name.upper()}")
+        print(f"Speed limit: {profile.max_speed:.3f} m/s")
+        print(f"Acceleration limit: {profile.max_acceleration:.3f} m/s²")
+        print(f"Deceleration limit: {profile.max_deceleration:.3f} m/s²")
+        print(f"Turning limit: {profile.max_turn_speed:.3f} rad/s")
+        print(f"Angular acceleration limit: {profile.max_angular_acceleration:.3f} rad/s²")
+        print(f"Commanded speed: {cmd_v:.3f} m/s")
+        print(f"Commanded turning: {cmd_w:.3f} rad/s")
+        print(f"Measured speed: {actual_v:.3f} m/s")
+        print(f"Measured turning: {actual_w:.3f} rad/s")
