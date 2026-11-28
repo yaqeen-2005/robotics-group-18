@@ -8,3 +8,4 @@ ros2_ws/src/camera/models/*.pt
 .runtime/
 webots/worlds/.*.wbproj
 webots/results/
+webots\controllers\pallet_robot\__pycache__

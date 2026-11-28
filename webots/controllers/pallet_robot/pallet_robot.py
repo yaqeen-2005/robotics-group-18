@@ -1,10 +1,20 @@
 """Manual bring-up only. No ROS, autonomous navigation, or ground-truth access."""
 import math
 from controller import Robot, Keyboard
+from lidar import LidarSensor
+from lidar_visualiser import LidarVisualiser
+from odometry import WheelOdometry
+from odometry_visualiser import OdometryVisualiser
+import matplotlib.pyplot as plt
+from sensor_interface import SensorInterface
+
 
 robot = Robot()
 step_ms = int(robot.getBasicTimeStep())
 dt = step_ms / 1000.0
+lidar = LidarSensor(robot, step_ms)
+visualiser = LidarVisualiser()
+
 keyboard = robot.getKeyboard()
 keyboard.enable(step_ms)
 left = robot.getDevice('left_wheel_motor')
@@ -26,6 +36,17 @@ for stage in lift_stages:
 
 RADIUS = 0.15
 TRACK = 0.82
+odom_track = 0.911
+odometry = WheelOdometry(RADIUS,odom_track)
+odometry_visualiser = OdometryVisualiser()
+
+sensors = SensorInterface(
+    lidar.resolution,
+    lidar.fov,
+    lidar.lidar.getMinRange(),
+    lidar.lidar.getMaxRange()
+)
+
 lift_target = 0.0
 previous = None
 stopped_for = 0.0
@@ -36,11 +57,23 @@ lift_jogging = False
 print('Click the 3D view. Hold W/S: forward/reverse, A/D: turn. Space: stop.')
 print('After stopping, hold U/J: raise/lower; release to hold height. Space stops both.')
 print('Lift travel blocks driving. R: print lift position.')
+print('Print LiDAR Data: L.')
+print('Show LiDAR Visualisation: P.')
+print("Print Wheel Odometry: O.")
+print("Show Odometry Trajectory: T.")
+print("Print SLAM Sensor Frame: K.")
 print('Manual prototype: no attachment, obstacle stop or autonomous controller is active.')
 
 while robot.step(step_ms) != -1:
     now = robot.getTime()
+    scan = lidar.get_scan()
     angles = [s.getValue() for s in encoders]
+    odom_updated = odometry.update(angles[0], angles[1], now)
+
+    sensor_frame = sensors.capture(
+        now, scan, odometry, odom_updated
+    )
+    odometry_visualiser.update(odometry.get_pose())
     valid = all(math.isfinite(x) for x in angles)
     wheel_speed = float('inf')
     if valid and previous is not None:
@@ -95,3 +128,58 @@ while robot.step(step_ms) != -1:
     right.setVelocity((v+yaw*TRACK/2)/RADIUS)
     if ord('R') in pressed:
         print(f'Lift: {position:.3f} m, target {lift_target:.3f} m; stationary {stopped_for:.2f} s')
+    if ord('L') in pressed:
+        valid_ranges = [d for d in scan if math.isfinite(d)]
+        print(f"LiDAR readings: {len(scan)}")
+        print(f"Resolution: {lidar.resolution}")
+        print(f"Field of view: {math.degrees(lidar.fov):.2f} degrees")
+        print(f"Angle increment: {math.degrees(lidar.angle_increment):.2f} degrees")
+        print(f"Far left: {scan[0]:.2f} m")
+        print(f"Front left: {scan[90]:.2f} m")
+        print(f"Centre: {scan[180]:.2f} m")
+        print(f"Front right: {scan[270]:.2f} m")
+        print(f"Far right: {scan[359]:.2f} m")
+        if valid_ranges:
+            print(f"Closest obstacle: {min(valid_ranges):.2f} m")
+            print(f"Centre reading: {scan[len(scan) // 2]:.2f} m")
+        else:
+            print("No valid distance readings")
+        points = lidar.get_points(scan)
+
+        print(f"Detected points: {len(points)}")
+
+        for i in [0, 90, 180, 270, 359]:
+            if i < len(scan) and math.isfinite(scan[i]):
+                angle = lidar.fov / 2 - (i + 0.5) * lidar.angle_increment
+
+                x = scan[i] * math.cos(angle)
+                y = scan[i] * math.sin(angle)
+
+                print(f"Index {i}: X: {x:.3f} m, Y: {y:.3f} m")
+    if ord('P') in pressed:
+        points = lidar.get_points(scan)
+        visualiser.show_scan(points)
+    if ord('O') in pressed:
+        x, y, theta = odometry.get_pose()
+        v, w = odometry.get_velocity()
+        print("----- Wheel Odometry -----")
+        print(f"Left encoder: {angles[0]:.3f} rad")
+        print(f"Right encoder: {angles[1]:.3f} rad")
+        print(f"X: {x:.3f} m")
+        print(f"Y: {y:.3f} m")
+        print(f"Heading: {math.degrees(theta):.2f} degrees")
+        print(f"Linear velocity: {v:.3f} m/s")
+        print(f"Angular velocity: {w:.3f} rad/s")
+    if ord('T') in pressed:
+        odometry_visualiser.show_trajectory()
+    if plt.get_fignums():
+        plt.pause(0.001)
+    if ord('K') in pressed and sensor_frame is not None:
+        print("----- SLAM Sensor Frame -----")
+        print(f"Time: {sensor_frame.time_s:.2f} s")
+        print(f"Scan readings: {len(sensor_frame.ranges_m)}")
+        print(f"Detected points: {len(sensor_frame.points_base_m)}")
+        print(f"Pose: {sensor_frame.odom_pose}")
+        print(f"Velocity: {sensor_frame.velocity}")
+        print(f"LiDAR offset: {sensor_frame.lidar_offset_m}")
+    
